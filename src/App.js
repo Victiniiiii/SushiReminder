@@ -1,20 +1,20 @@
 import React, { useEffect } from "react";
 import "./App.css";
-import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/api/notification';
+import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 
 function App() {
-	/* useEffect(() => {
-		if (Notification.permission !== "granted") {
-			Notification.requestPermission();
+	useEffect(() => {
+		let permissionGranted = isPermissionGranted();
+
+		if (!permissionGranted) {
+			const permission = requestPermission();
+			permissionGranted = permission === "granted";
 		}
 
-		window.tauri.listen("send-notification", (message) => {
-			new Notification("Tauri Notification", {
-				body: message,
-				icon: "path/to/icon.png",
-			});
-		});
-	}, []); */
+		if (permissionGranted) {
+			sendNotification({ title: "Tauri", body: "Tauri is awesome!" });
+		}
+	}, []);
 
 	return (
 		<div className="App">
