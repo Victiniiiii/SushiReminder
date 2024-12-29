@@ -1,27 +1,57 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 
-function App() {
-	useEffect(() => {
-		let permissionGranted = isPermissionGranted();
+const App = () => {
+	const [activeTab, setActiveTab] = useState("one-time");
 
-		if (!permissionGranted) {
-			const permission = requestPermission();
-			permissionGranted = permission === "granted";
+	const renderTabContent = () => {
+		switch (activeTab) {
+			case "one-time":
+				return (
+					<div className="tab-content">
+						<h2>One-Time Reminders</h2>
+						<button className="create-button">Create Reminder</button>
+					</div>
+				);
+			case "repeated":
+				return (
+					<div className="tab-content">
+						<h2>Repeated Reminders</h2>
+						<button className="create-button">Create Reminder</button>
+					</div>
+				);
+			case "settings":
+				return (
+					<div className="tab-content">
+						<h2>Settings</h2>
+						<p>Configure your preferences here.</p>
+					</div>
+				);
+			default:
+				return null;
 		}
-
-		if (permissionGranted) {
-			sendNotification({ title: "Tauri", body: "Tauri is awesome!" });
-		}
-	}, []);
+	};
 
 	return (
-		<div className="App">
-			<h1>Welcome to Tauri!</h1>
-			<p>This is a sample app with desktop notifications.</p>
+		<div className="app">
+			<header className="header">
+				<h1>Remindauri</h1>
+			</header>
+			<nav className="tabs">
+				<button className={activeTab === "one-time" ? "active" : ""} onClick={() => setActiveTab("one-time")}>
+					One-Time Reminders
+				</button>
+				<button className={activeTab === "repeated" ? "active" : ""} onClick={() => setActiveTab("repeated")}>
+					Repeated Reminders
+				</button>
+				<button className={activeTab === "settings" ? "active" : ""} onClick={() => setActiveTab("settings")}>
+					Settings
+				</button>
+			</nav>
+			<main>{renderTabContent()}</main>
 		</div>
 	);
-}
+};
 
 export default App;
