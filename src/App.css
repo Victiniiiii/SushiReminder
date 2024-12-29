@@ -29,7 +29,7 @@ body {
 	background: none;
 	cursor: pointer;
 	font-size: 1rem;
-	transition: color 0.3s, border-bottom 0.3s;
+    border-bottom: 2px solid transparent;	
 }
 
 .tabs button:hover {
@@ -39,6 +39,7 @@ body {
 .tabs .active {
 	color: #6200ea;
 	border-bottom: 2px solid #6200ea;
+    transition: color 0.3s, border-bottom 0.3s;
 }
 
 .tab-content {
