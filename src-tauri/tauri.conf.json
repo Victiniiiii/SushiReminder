@@ -4,6 +4,7 @@
 	"version": "0.1.0",
 	"identifier": "com.mycompany.my-react-app",
 	"build": {
+		"devUrl": "http://localhost:3000",
 		"frontendDist": "../build",
 		"beforeDevCommand": "npm run start",
 		"beforeBuildCommand": "npm run build"

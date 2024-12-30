@@ -6,6 +6,11 @@
 	"permissions": [
 		"core:default",
 		"notification:default",
-		"fs:allow-write-text-file"
+        "fs:allow-create",
+        "fs:allow-read-text-file",
+        "fs:allow-exists",
+        "fs:allow-desktop-read",
+        "fs:allow-write",
+        "fs:allow-write-text-file"
 	]
 }
