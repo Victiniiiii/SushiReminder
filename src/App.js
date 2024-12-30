@@ -49,6 +49,17 @@ const App = () => {
 
 	const handleCreateReminder = async () => {
 		const newReminder = { ...reminderData };
+
+		if (reminderType === "one-time") {
+			const selectedDateTime = new Date(`${newReminder.date}T${newReminder.time}`);
+			const now = new Date();
+
+			if (selectedDateTime < now) {
+				alert("Error: You cannot set a reminder in the past.");
+				return;
+			}
+		}
+
 		const updatedReminders = { ...reminders };
 
 		if (reminderType === "one-time") {
@@ -60,6 +71,18 @@ const App = () => {
 		await saveReminders(updatedReminders);
 		setIsModalOpen(false);
 		resetReminderForm();
+	};
+
+	const formatDateTime = (date, time) => {
+		const dateObj = new Date(`${date}T${time}`);
+		const options = {
+			hour: "2-digit",
+			minute: "2-digit",
+			day: "2-digit",
+			month: "2-digit",
+			year: "numeric",
+		};
+		return dateObj.toLocaleString(undefined, options).replace(",", "");
 	};
 
 	const resetReminderForm = () => {
@@ -144,7 +167,7 @@ const App = () => {
 						<ul>
 							{reminders.oneTime.map((reminder, index) => (
 								<li key={index}>
-									{reminder.name} - {reminder.date} {reminder.time}
+									{reminder.name} - {formatDateTime(reminder.date, reminder.time)}
 								</li>
 							))}
 						</ul>
@@ -160,7 +183,7 @@ const App = () => {
 						<ul>
 							{reminders.repeated.map((reminder, index) => (
 								<li key={index}>
-									{reminder.name} - {reminder.repeatFrequency} at {reminder.repeatTime}
+									{reminder.name} - {reminder.repeatFrequency} at {formatDateTime(reminder.date || "", reminder.repeatTime)}
 								</li>
 							))}
 						</ul>
