@@ -13,7 +13,9 @@ const App = () => {
 		time: "",
 		repeatFrequency: "hourly",
 		repeatTime: "",
+		resetMode: "manual",
 	});
+
 	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
 
 	const ensurePermission = async () => {
@@ -27,24 +29,48 @@ const App = () => {
 	};
 
 	useEffect(() => {
-		const loadReminders = async () => {
-			try {
-				await ensurePermission();
-				const data = await readTextFile("reminders.json", { baseDir: BaseDirectory.Desktop });
-				setReminders(JSON.parse(data));
-			} catch (error) {
-				console.error("Error loading reminders:", error);
-				const initialData = JSON.stringify({ oneTime: [], repeated: [] });
-				await writeTextFile("reminders.json", initialData, { baseDir: BaseDirectory.Desktop });
-				setReminders(JSON.parse(initialData));
-			}
+		const checkReminders = () => {
+			const now = new Date();
+			const updatedReminders = { ...reminders };
+
+			updatedReminders.repeated.forEach((reminder, index) => {
+				if (reminder.resetMode === "automatic") {
+					const nextTime = new Date(reminder.nextTime || reminder.repeatTime);
+					if (now >= nextTime) {
+						const interval = getIntervalInMilliseconds(reminder.repeatFrequency);
+						updatedReminders.repeated[index].nextTime = new Date(nextTime.getTime() + interval).toISOString();
+						sendNotification({ title: "Reminder", body: `It's time for: ${reminder.name}` });
+					}
+				}
+			});
+
+			setReminders(updatedReminders);
 		};
-		loadReminders();
-	}, []);
+
+		const interval = setInterval(checkReminders, 60000);
+		return () => clearInterval(interval);
+	}, [reminders]);
 
 	const saveReminders = async (updatedReminders) => {
 		setReminders(updatedReminders);
 		await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+	};
+
+	const getIntervalInMilliseconds = (frequency) => {
+		switch (frequency) {
+			case "hourly":
+				return 3600000;
+			case "daily":
+				return 86400000;
+			case "weekly":
+				return 604800000;
+			case "monthly":
+				return 2629800000;
+			case "yearly":
+				return 31557600000;
+			default:
+				return 0;
+		}
 	};
 
 	const handleCreateReminder = async () => {
@@ -100,6 +126,14 @@ const App = () => {
 		setReminderData((prev) => ({ ...prev, [name]: value }));
 	};
 
+	const handleManualReset = (index) => {
+		const updatedReminders = { ...reminders };
+		const reminder = updatedReminders.repeated[index];
+		const interval = getIntervalInMilliseconds(reminder.repeatFrequency);
+		reminder.nextTime = new Date(new Date().getTime() + interval).toISOString();
+		saveReminders(updatedReminders);
+	};
+
 	const renderModalContent = () => {
 		return (
 			<div className="modal">
@@ -144,6 +178,13 @@ const App = () => {
 								Time:
 								<input type="time" name="repeatTime" value={reminderData.repeatTime} onChange={handleInputChange} />
 							</label>
+							<label>
+								Reset Mode:
+								<select name="resetMode" value={reminderData.resetMode} onChange={handleInputChange}>
+									<option value="manual">Manual</option>
+									<option value="automatic">Automatic</option>
+								</select>
+							</label>
 						</>
 					)}
 					<div className="modal-actions">
@@ -184,6 +225,7 @@ const App = () => {
 							{reminders.repeated.map((reminder, index) => (
 								<li key={index}>
 									{reminder.name} - {reminder.repeatFrequency} at {formatDateTime(reminder.date || "", reminder.repeatTime)}
+									{reminder.resetMode === "manual" && <button onClick={() => handleManualReset(index)}>Reset</button>}
 								</li>
 							))}
 						</ul>
