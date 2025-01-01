@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
-import { readTextFile, writeTextFile, BaseDirectory, create, exists } from "@tauri-apps/plugin-fs";
+import { readTextFile, writeTextFile, BaseDirectory, exists } from "@tauri-apps/plugin-fs";
 import { sendNotification } from "@tauri-apps/plugin-notification";
-import { ensurePermission } from "./permission.js";
+import { ensurePermission, notifyTheUser } from "./permissionnotification.js";
 
 const App = () => {
 	const [activeTab, setActiveTab] = useState("one-time");
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [reminderType, setReminderType] = useState("one-time");
 	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
+	const [countdowns, setCountdowns] = useState({});
 	const [reminderData, setReminderData] = useState({
 		name: "",
 		date: "",
@@ -36,8 +37,87 @@ const App = () => {
 		loadReminders();
 	}, []);
 
+	useEffect(() => {
+		const interval = setInterval(() => {
+			const now = new Date();
+			const updatedCountdowns = { ...countdowns };
+
+			reminders.oneTime.forEach((reminder, index) => {
+				const reminderTime = new Date(`${reminder.date}T${reminder.time}`);
+				const timeDiff = reminderTime - now;
+
+				if (timeDiff <= 0 && !reminder.notified) {
+					notifyTheUser("Reminder Alert", `Reminder: ${reminder.name}`);
+					updatedCountdowns[index] = { time: "Time's up!", notified: true };
+
+					reminders.oneTime[index].notified = true;
+				} else if (timeDiff > 0) {
+					updatedCountdowns[index] = { time: formatCountdown(timeDiff), notified: false };
+				}
+			});
+
+			reminders.repeated.forEach((reminder, index) => {
+				const nextOccurrence = getNextOccurrence(reminder);
+				const timeDiff = nextOccurrence - now;
+
+				if (timeDiff <= 0 && !reminder.notified) {
+					notifyTheUser("Reminder Alert", `Reminder: ${reminder.name}`);
+					updatedCountdowns[index] = { time: "Time's up!", notified: true };
+
+					reminders.repeated[index].notified = true;
+				} else if (timeDiff > 0) {
+					updatedCountdowns[index] = { time: formatCountdown(timeDiff), notified: false };
+				}
+			});
+
+			setCountdowns(updatedCountdowns);
+			writeTextFile("reminders.json", JSON.stringify(reminders), { baseDir: BaseDirectory.Desktop });
+		}, 1000);
+
+		return () => clearInterval(interval);
+	}, [reminders, countdowns]);
+
+	const getNextOccurrence = (reminder) => {
+		const now = new Date();
+		let nextOccurrence = new Date(now);
+
+		const reminderTime = reminder.repeatTime.split(":");
+		const reminderHour = parseInt(reminderTime[0]);
+		const reminderMinute = parseInt(reminderTime[1]);
+
+		if (reminder.repeatFrequency === "hourly") {
+			if (now.getHours() > reminderHour || (now.getHours() === reminderHour && now.getMinutes() >= reminderMinute)) {
+				nextOccurrence.setHours(now.getHours() + 1, reminderMinute, 0, 0);
+			} else {
+				nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+			}
+		}
+
+		if (reminder.repeatFrequency === "daily") {
+			nextOccurrence.setDate(now.getDate() + 1);
+			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+		}
+
+		if (reminder.repeatFrequency === "weekly") {
+			nextOccurrence.setDate(now.getDate() + 7);
+			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+		}
+
+		if (reminder.repeatFrequency === "monthly") {
+			nextOccurrence.setMonth(now.getMonth() + 1);
+			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+		}
+
+		if (reminder.repeatFrequency === "yearly") {
+			nextOccurrence.setFullYear(now.getFullYear() + 1);
+			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+		}
+
+		return nextOccurrence;
+	};
+
 	const handleCreateReminder = async () => {
-		const newReminder = { ...reminderData };
+		const newReminder = { ...reminderData, notified: false };
 
 		if (reminderType === "one-time") {
 			const selectedDateTime = new Date(`${newReminder.date}T${newReminder.time}`);
@@ -70,19 +150,39 @@ const App = () => {
 			time: "",
 			repeatFrequency: "hourly",
 			repeatTime: "",
+			resetMode: "manual",
 		});
 	};
 
 	const formatDateTime = (date, time) => {
-		const dateObj = new Date(`${date}T${time}`);
-		const options = {
-			hour: "2-digit",
-			minute: "2-digit",
-			day: "2-digit",
-			month: "2-digit",
-			year: "numeric",
-		};
-		return dateObj.toLocaleString(undefined, options).replace(",", "");
+		if (!date && time) {
+			const [hours, minutes] = time.split(":");
+			const now = new Date();
+			now.setHours(hours, minutes, 0, 0);
+			return now.toLocaleTimeString(undefined, {
+				hour: "2-digit",
+				minute: "2-digit",
+			});
+		} else if (date && time) {
+			const dateObj = new Date(`${date}T${time}`);
+			const options = {
+				hour: "2-digit",
+				minute: "2-digit",
+				day: "2-digit",
+				month: "2-digit",
+				year: "numeric",
+			};
+			return dateObj.toLocaleString(undefined, options).replace(",", "");
+		}
+		return "Invalid Date";
+	};
+
+	const formatCountdown = (timeDiff) => {
+		const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
+		const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
+		const seconds = Math.floor((timeDiff / 1000) % 60);
+
+		return `${hours}h ${minutes}m ${seconds}s`;
 	};
 
 	const handleInputChange = (e) => {
@@ -164,7 +264,7 @@ const App = () => {
 						<ul>
 							{reminders.oneTime.map((reminder, index) => (
 								<li key={index}>
-									{reminder.name} - {formatDateTime(reminder.date, reminder.time)}
+									{reminder.name} - {formatDateTime(reminder.date, reminder.time)} - {countdowns[index]?.time || "Calculating..."}
 								</li>
 							))}
 						</ul>
@@ -180,8 +280,8 @@ const App = () => {
 						<ul>
 							{reminders.repeated.map((reminder, index) => (
 								<li key={index}>
-									{reminder.name} - {reminder.repeatFrequency} at {formatDateTime(reminder.date || "", reminder.repeatTime)}
-									{reminder.resetMode === "manual" && <button onClick={console.log("TODO")}>Reset TODO</button>}
+									{reminder.name} - {reminder.repeatFrequency} at {formatDateTime("", reminder.repeatTime)} - {countdowns[index]?.time || "Calculating..."}
+									{reminder.resetMode === "manual" && <button onClick={() => console.log("Reset TODO")}>Reset TODO</button>}
 								</li>
 							))}
 						</ul>
