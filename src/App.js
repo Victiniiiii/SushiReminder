@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import { readTextFile, writeTextFile, BaseDirectory, create, exists } from "@tauri-apps/plugin-fs";
-import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
+import { sendNotification } from "@tauri-apps/plugin-notification";
+import { ensurePermission } from "./permission.js";
 
 const App = () => {
 	const [activeTab, setActiveTab] = useState("one-time");
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [reminderType, setReminderType] = useState("one-time");
+	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
 	const [reminderData, setReminderData] = useState({
 		name: "",
 		date: "",
@@ -16,62 +18,23 @@ const App = () => {
 		resetMode: "manual",
 	});
 
-	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
-
-	const ensurePermission = async () => {
-		const permissionGranted = await isPermissionGranted(BaseDirectory.App);
-		if (!permissionGranted) {
-			const granted = await requestPermission(BaseDirectory.App);
-			if (!granted) {
-				throw new Error("File system permission denied");
-			}
-		}
-	};
-
 	useEffect(() => {
-		const checkReminders = () => {
-			const now = new Date();
-			const updatedReminders = { ...reminders };
-
-			updatedReminders.repeated.forEach((reminder, index) => {
-				if (reminder.resetMode === "automatic") {
-					const nextTime = new Date(reminder.nextTime || reminder.repeatTime);
-					if (now >= nextTime) {
-						const interval = getIntervalInMilliseconds(reminder.repeatFrequency);
-						updatedReminders.repeated[index].nextTime = new Date(nextTime.getTime() + interval).toISOString();
-						sendNotification({ title: "Reminder", body: `It's time for: ${reminder.name}` });
-					}
+		const loadReminders = async () => {
+			await ensurePermission();
+			try {
+				if (await exists("reminders.json", { baseDir: BaseDirectory.Desktop })) {
+					setReminders(JSON.parse(await readTextFile("reminders.json", { baseDir: BaseDirectory.Desktop })));
+				} else {
+					const initialData = JSON.stringify({ oneTime: [], repeated: [] });
+					await writeTextFile("reminders.json", initialData, { baseDir: BaseDirectory.Desktop });
+					setReminders(JSON.parse(initialData));
 				}
-			});
-
-			setReminders(updatedReminders);
+			} catch (e) {
+				console.error(e);
+			}
 		};
-
-		const interval = setInterval(checkReminders, 60000);
-		return () => clearInterval(interval);
-	}, [reminders]);
-
-	const saveReminders = async (updatedReminders) => {
-		setReminders(updatedReminders);
-		await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
-	};
-
-	const getIntervalInMilliseconds = (frequency) => {
-		switch (frequency) {
-			case "hourly":
-				return 3600000;
-			case "daily":
-				return 86400000;
-			case "weekly":
-				return 604800000;
-			case "monthly":
-				return 2629800000;
-			case "yearly":
-				return 31557600000;
-			default:
-				return 0;
-		}
-	};
+		loadReminders();
+	}, []);
 
 	const handleCreateReminder = async () => {
 		const newReminder = { ...reminderData };
@@ -80,7 +43,10 @@ const App = () => {
 			const selectedDateTime = new Date(`${newReminder.date}T${newReminder.time}`);
 			const now = new Date();
 
-			if (selectedDateTime < now) {
+			if (isNaN(selectedDateTime.getTime())) {
+				alert("Error: The provided date and time are invalid.");
+				return;
+			} else if (selectedDateTime < now) {
 				alert("Error: You cannot set a reminder in the past.");
 				return;
 			}
@@ -94,9 +60,17 @@ const App = () => {
 			updatedReminders.repeated.push(newReminder);
 		}
 
-		await saveReminders(updatedReminders);
+		setReminders(updatedReminders);
+		await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+
 		setIsModalOpen(false);
-		resetReminderForm();
+		setReminderData({
+			name: "",
+			date: "",
+			time: "",
+			repeatFrequency: "hourly",
+			repeatTime: "",
+		});
 	};
 
 	const formatDateTime = (date, time) => {
@@ -111,27 +85,9 @@ const App = () => {
 		return dateObj.toLocaleString(undefined, options).replace(",", "");
 	};
 
-	const resetReminderForm = () => {
-		setReminderData({
-			name: "",
-			date: "",
-			time: "",
-			repeatFrequency: "hourly",
-			repeatTime: "",
-		});
-	};
-
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;
 		setReminderData((prev) => ({ ...prev, [name]: value }));
-	};
-
-	const handleManualReset = (index) => {
-		const updatedReminders = { ...reminders };
-		const reminder = updatedReminders.repeated[index];
-		const interval = getIntervalInMilliseconds(reminder.repeatFrequency);
-		reminder.nextTime = new Date(new Date().getTime() + interval).toISOString();
-		saveReminders(updatedReminders);
 	};
 
 	const renderModalContent = () => {
@@ -225,7 +181,7 @@ const App = () => {
 							{reminders.repeated.map((reminder, index) => (
 								<li key={index}>
 									{reminder.name} - {reminder.repeatFrequency} at {formatDateTime(reminder.date || "", reminder.repeatTime)}
-									{reminder.resetMode === "manual" && <button onClick={() => handleManualReset(index)}>Reset</button>}
+									{reminder.resetMode === "manual" && <button onClick={console.log("TODO")}>Reset TODO</button>}
 								</li>
 							))}
 						</ul>
