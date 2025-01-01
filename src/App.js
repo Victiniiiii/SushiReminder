@@ -257,9 +257,6 @@ const App = () => {
 				return (
 					<div className="tab-content">
 						<h2>One-Time Reminders</h2>
-						<button className="create-button" onClick={() => setIsModalOpen(true)}>
-							Create Reminder
-						</button>
 						{reminders.oneTime.map((reminder, index) => (
 							<div key={index}>
 								{reminder.name} - {formatDateTime(reminder.date, reminder.time)} - {countdowns[index]?.time || "Calculating..."}
@@ -271,9 +268,6 @@ const App = () => {
 				return (
 					<div className="tab-content">
 						<h2>Repeated Reminders</h2>
-						<button className="create-button" onClick={() => setIsModalOpen(true)}>
-							Create Reminder
-						</button>
 						{reminders.repeated.map((reminder, index) => (
 							<div key={index}>
 								{reminder.name} - {reminder.repeatFrequency} at {formatDateTime("", reminder.repeatTime)} - {countdowns[index]?.time || "Calculating..."}
@@ -298,6 +292,9 @@ const App = () => {
 		<div className="app">
 			<header className="header">
 				<h1>Remindauri</h1>
+				<button className="create-button" onClick={() => setIsModalOpen(true)}>
+					Create Reminder
+				</button>
 			</header>
 			<nav className="tabs">
 				<button className={activeTab === "one-time" ? "active" : ""} onClick={() => setActiveTab("one-time")}>
