@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import { readTextFile, writeTextFile, BaseDirectory, exists } from "@tauri-apps/plugin-fs";
-import { sendNotification } from "@tauri-apps/plugin-notification";
 import { ensurePermission, notifyTheUser } from "./permissionnotification.js";
 
 const App = () => {
@@ -261,13 +260,11 @@ const App = () => {
 						<button className="create-button" onClick={() => setIsModalOpen(true)}>
 							Create Reminder
 						</button>
-						<ul>
-							{reminders.oneTime.map((reminder, index) => (
-								<li key={index}>
-									{reminder.name} - {formatDateTime(reminder.date, reminder.time)} - {countdowns[index]?.time || "Calculating..."}
-								</li>
-							))}
-						</ul>
+						{reminders.oneTime.map((reminder, index) => (
+							<div key={index}>
+								{reminder.name} - {formatDateTime(reminder.date, reminder.time)} - {countdowns[index]?.time || "Calculating..."}
+							</div>
+						))}
 					</div>
 				);
 			case "repeated":
@@ -277,14 +274,12 @@ const App = () => {
 						<button className="create-button" onClick={() => setIsModalOpen(true)}>
 							Create Reminder
 						</button>
-						<ul>
-							{reminders.repeated.map((reminder, index) => (
-								<li key={index}>
-									{reminder.name} - {reminder.repeatFrequency} at {formatDateTime("", reminder.repeatTime)} - {countdowns[index]?.time || "Calculating..."}
-									{reminder.resetMode === "manual" && <button onClick={() => console.log("Reset TODO")}>Reset TODO</button>}
-								</li>
-							))}
-						</ul>
+						{reminders.repeated.map((reminder, index) => (
+							<div key={index}>
+								{reminder.name} - {reminder.repeatFrequency} at {formatDateTime("", reminder.repeatTime)} - {countdowns[index]?.time || "Calculating..."}
+								{reminder.resetMode === "manual" && <button onClick={() => console.log("Reset TODO")}>Reset TODO</button>}
+							</div>
+						))}
 					</div>
 				);
 			case "settings":
