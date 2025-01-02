@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import { v4 as uuidv4 } from "uuid";
 import { readTextFile, writeTextFile, BaseDirectory, exists } from "@tauri-apps/plugin-fs";
 import { ensurePermission, notifyTheUser } from "./permissionnotification.js";
 
@@ -9,6 +10,8 @@ const App = () => {
 	const [reminderType, setReminderType] = useState("one-time");
 	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
 	const [countdowns, setCountdowns] = useState({});
+	const [oneTimeCountdowns, setOneTimeCountdowns] = useState({});
+	const [repeatedCountdowns, setRepeatedCountdowns] = useState({});
 	const [reminderData, setReminderData] = useState({
 		name: "",
 		date: "",
@@ -39,38 +42,30 @@ const App = () => {
 	useEffect(() => {
 		const interval = setInterval(() => {
 			const now = new Date();
-			const updatedCountdowns = { ...countdowns };
 
-			reminders.oneTime.forEach((reminder, index) => {
-				const [year, month, day] = reminder.date.split("-");
-				const [hours, minutes] = reminder.time.split(":");
-				const reminderTime = new Date(year, month - 1, day, hours, minutes, 0);
+			const newOneTimeCountdowns = { ...oneTimeCountdowns };
+			reminders.oneTime.forEach((reminder) => {
+				const reminderTime = new Date(`${reminder.date}T${reminder.time}`);
+				const timeDiff = reminderTime - now;
 
-				if (now > reminderTime) {
-					updatedCountdowns[index] = { time: "Time's up!", notified: true };
-				} else {
-					const timeDiff = reminderTime - now;
-					updatedCountdowns[index] = { time: formatCountdown(timeDiff), notified: false };
-					console.log(updatedCountdowns[index]);
-				}
+				newOneTimeCountdowns[reminder.id] = timeDiff <= 0 ? "Time's up!" : formatCountdown(timeDiff);
 			});
+			setOneTimeCountdowns(newOneTimeCountdowns);
 
-			reminders.repeated.forEach((reminder, index) => {
+			const newRepeatedCountdowns = { ...repeatedCountdowns };
+			reminders.repeated.forEach((reminder) => {
 				const nextOccurrence = getNextOccurrence(reminder);
 				const timeDiff = nextOccurrence - now;
-				if (timeDiff <= 0) {
-					updatedCountdowns[index] = { time: "Time's up!", notified: true };
-				} else {
-					updatedCountdowns[index] = { time: formatCountdown(timeDiff), notified: false };
-				}
-			});
 
-			setCountdowns(updatedCountdowns);
+				newRepeatedCountdowns[reminder.id] = timeDiff <= 0 ? "Time's up!" : formatCountdown(timeDiff);
+			});
+			setRepeatedCountdowns(newRepeatedCountdowns);
+
 			writeTextFile("reminders.json", JSON.stringify(reminders), { baseDir: BaseDirectory.Desktop });
 		}, 1000);
 
 		return () => clearInterval(interval);
-	}, [reminders, countdowns]);
+	}, [reminders, oneTimeCountdowns, repeatedCountdowns]);
 
 	const getNextOccurrence = (reminder) => {
 		const now = new Date();
@@ -106,7 +101,12 @@ const App = () => {
 	};
 
 	const handleCreateReminder = async () => {
-		const newReminder = { ...reminderData, notified: false };
+		const newReminder = { ...reminderData, id: uuidv4(), notified: false };
+
+		if (newReminder.name == "") {
+			alert("Please give a name to this reminder.");
+			return;
+		}
 
 		if (reminderType === "one-time") {
 			const selectedDateTime = new Date(`${newReminder.date}T${newReminder.time}`);
@@ -252,9 +252,9 @@ const App = () => {
 
 		const handleDeleteReminder = async (type, index) => {
 			const updatedReminders = { ...reminders };
-			updatedReminders[type].splice(index, 1); // Remove the reminder from the list
-			setReminders(updatedReminders); // Update state
-			await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop }); // Persist changes
+			updatedReminders[type].splice(index, 1);
+			setReminders(updatedReminders);
+			await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
 		};
 
 		switch (activeTab) {
@@ -262,32 +262,26 @@ const App = () => {
 				return (
 					<div className="tab-content">
 						<h2>One-Time Reminders</h2>
-						{reminders.oneTime.map((reminder, index) => {
-							const reminderDate = new Date(`${reminder.date}T${reminder.time}`);
-							const isPastDue = now > reminderDate;
-							const countdownTime = countdowns[index]?.time || "Calculating...";
-							return (
-								<div key={index} className="reminder-item">
-									<span>
-										{reminder.name} - {isPastDue ? "Time's up!" : formatDateTime(reminder.date, reminder.time)}
-										{!isPastDue ? ` - ${countdownTime}` : ""}
-									</span>
-									<button onClick={() => handleDeleteReminder("oneTime", index)}>Delete</button>
-								</div>
-							);
-						})}
+						{reminders.oneTime.map((reminder) => (
+							<div key={reminder.id} className="reminder-item">
+								<span>
+									{reminder.name} - {formatDateTime(reminder.date, reminder.time)} - {oneTimeCountdowns[reminder.id] || "Calculating..."}
+								</span>
+								<button onClick={() => handleDeleteReminder("oneTime", reminder.id)}>Delete</button>
+							</div>
+						))}
 					</div>
 				);
 			case "repeated":
 				return (
 					<div className="tab-content">
 						<h2>Repeated Reminders</h2>
-						{reminders.repeated.map((reminder, index) => (
-							<div key={index} className="reminder-item">
+						{reminders.repeated.map((reminder) => (
+							<div key={reminder.id} className="reminder-item">
 								<span>
-									{reminder.name} - {formatDateTime("", reminder.repeatTime)} - {countdowns[index]?.time || "Calculating..."}
+									{reminder.name} - {formatDateTime("", reminder.repeatTime)} - {repeatedCountdowns[reminder.id] || "Calculating..."}
 								</span>
-								<button onClick={() => handleDeleteReminder("repeated", index)}>Delete</button>
+								<button onClick={() => handleDeleteReminder("repeated", reminder.id)}>Delete</button>
 							</div>
 						))}
 					</div>
