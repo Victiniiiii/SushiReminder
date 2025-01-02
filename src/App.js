@@ -312,6 +312,23 @@ const App = () => {
 			}
 		};
 
+		const handleRenameReminder = (id, newName) => {
+			const updatedReminders = { ...reminders };
+			const reminder = updatedReminders.repeated.find((reminder) => reminder.id === id);
+			if (reminder) {
+				reminder.name = newName;
+				setReminders(updatedReminders);
+				writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+			} else {
+				const oneTimeReminder = updatedReminders.oneTime.find((reminder) => reminder.id === id);
+				if (oneTimeReminder) {
+					oneTimeReminder.name = newName;
+					setReminders(updatedReminders);
+					writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+				}
+			}
+		};
+
 		switch (activeTab) {
 			case "one-time":
 				return (
@@ -323,6 +340,16 @@ const App = () => {
 									{reminder.name} - {formatDateTime(reminder.date, reminder.time)} - {oneTimeCountdowns[reminder.id] || "Calculating..."}
 								</span>
 								<button onClick={() => handleDeleteReminder("oneTime", reminder.id)}>Delete</button>
+								<button
+									onClick={() => {
+										const newName = prompt("Enter new name:", reminder.name);
+										if (newName && newName.trim() !== "") {
+											handleRenameReminder(reminder.id, newName);
+										}
+									}}
+								>
+									Rename
+								</button>
 							</div>
 						))}
 					</div>
@@ -338,6 +365,16 @@ const App = () => {
 								</span>
 								<button onClick={() => handleDeleteReminder("repeated", reminder.id)}>Delete</button>
 								<button onClick={() => handleResetReminder(reminder.id)}>Reset</button>
+								<button
+									onClick={() => {
+										const newName = prompt("Enter new name:", reminder.name);
+										if (newName && newName.trim() !== "") {
+											handleRenameReminder(reminder.id, newName);
+										}
+									}}
+								>
+									Rename
+								</button>
 							</div>
 						))}
 					</div>
