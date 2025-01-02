@@ -43,14 +43,10 @@ const App = () => {
 
 			reminders.oneTime.forEach((reminder, index) => {
 				const reminderTime = new Date(`${reminder.date}T${reminder.time}`);
-				const timeDiff = reminderTime - now;
-
-				if (timeDiff <= 0 && !reminder.notified) {
-					notifyTheUser("Reminder Alert", `Reminder: ${reminder.name}`);
+				if (now > reminderTime) {
 					updatedCountdowns[index] = { time: "Time's up!", notified: true };
-
-					reminders.oneTime[index].notified = true;
-				} else if (timeDiff > 0) {
+				} else {
+					const timeDiff = reminderTime - now;
 					updatedCountdowns[index] = { time: formatCountdown(timeDiff), notified: false };
 				}
 			});
@@ -58,13 +54,9 @@ const App = () => {
 			reminders.repeated.forEach((reminder, index) => {
 				const nextOccurrence = getNextOccurrence(reminder);
 				const timeDiff = nextOccurrence - now;
-
-				if (timeDiff <= 0 && !reminder.notified) {
-					notifyTheUser("Reminder Alert", `Reminder: ${reminder.name}`);
+				if (timeDiff <= 0) {
 					updatedCountdowns[index] = { time: "Time's up!", notified: true };
-
-					reminders.repeated[index].notified = true;
-				} else if (timeDiff > 0) {
+				} else {
 					updatedCountdowns[index] = { time: formatCountdown(timeDiff), notified: false };
 				}
 			});
@@ -95,19 +87,13 @@ const App = () => {
 		if (reminder.repeatFrequency === "daily") {
 			nextOccurrence.setDate(now.getDate() + 1);
 			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
-		}
-
-		if (reminder.repeatFrequency === "weekly") {
+		} else if (reminder.repeatFrequency === "weekly") {
 			nextOccurrence.setDate(now.getDate() + 7);
 			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
-		}
-
-		if (reminder.repeatFrequency === "monthly") {
+		} else if (reminder.repeatFrequency === "monthly") {
 			nextOccurrence.setMonth(now.getMonth() + 1);
 			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
-		}
-
-		if (reminder.repeatFrequency === "yearly") {
+		} else if (reminder.repeatFrequency === "yearly") {
 			nextOccurrence.setFullYear(now.getFullYear() + 1);
 			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
 		}
@@ -252,16 +238,22 @@ const App = () => {
 	};
 
 	const renderTabContent = () => {
+		const now = new Date();
+
 		switch (activeTab) {
 			case "one-time":
 				return (
 					<div className="tab-content">
 						<h2>One-Time Reminders</h2>
-						{reminders.oneTime.map((reminder, index) => (
-							<div key={index}>
-								{reminder.name} - {formatDateTime(reminder.date, reminder.time)} - {countdowns[index]?.time || "Calculating..."}
-							</div>
-						))}
+						{reminders.oneTime.map((reminder, index) => {
+							const reminderDate = new Date(`${reminder.date}T${reminder.time}`);
+							const isPastDue = now > reminderDate;
+							return (
+								<div key={index}>
+									{reminder.name} - {isPastDue ? "Time's up!" : formatDateTime(reminder.date, reminder.time)} {!isPastDue ? "- " + countdowns[index]?.time || "- Calculating..." : ""}
+								</div>
+							);
+						})}
 					</div>
 				);
 			case "repeated":
@@ -270,7 +262,7 @@ const App = () => {
 						<h2>Repeated Reminders</h2>
 						{reminders.repeated.map((reminder, index) => (
 							<div key={index}>
-								{reminder.name} - {reminder.repeatFrequency} at {formatDateTime("", reminder.repeatTime)} - {countdowns[index]?.time || "Calculating..."}
+								{reminder.name} - {formatDateTime("", reminder.repeatTime)} - {countdowns[index]?.time || "Calculating..."}
 								{reminder.resetMode === "manual" && <button onClick={() => console.log("Reset TODO")}>Reset TODO</button>}
 							</div>
 						))}
