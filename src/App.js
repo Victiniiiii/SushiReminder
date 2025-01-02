@@ -171,7 +171,6 @@ const App = () => {
 		const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
 		const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
 		const seconds = Math.floor((timeDiff / 1000) % 60);
-		console.log(days, hours, minutes, seconds);
 
 		if (days > 0) {
 			return `${days}d ${hours}h ${minutes}m ${seconds}s`;
@@ -250,11 +249,67 @@ const App = () => {
 	const renderTabContent = () => {
 		const now = new Date();
 
-		const handleDeleteReminder = async (type, index) => {
+		const handleDeleteReminder = async (type, id) => {
+			console.log(`Deleting reminder: Type=${type}, ID=${id}`);
 			const updatedReminders = { ...reminders };
-			updatedReminders[type].splice(index, 1);
+			updatedReminders[type] = updatedReminders[type].filter((reminder) => reminder.id !== id);
 			setReminders(updatedReminders);
 			await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+		};
+
+		const handleResetReminder = async (id) => {
+			console.log(`Resetting reminder with ID=${id}`);
+			const updatedReminders = { ...reminders };
+			const reminder = updatedReminders.repeated.find((reminder) => reminder.id === id);
+
+			if (reminder) {
+				console.log(`Reminder found:`, reminder);
+
+				const now = new Date();
+				const currentHour = now.getHours();
+				const currentMinute = now.getMinutes();
+				const currentSecond = 0;
+
+				switch (reminder.repeatFrequency) {
+					case "hourly":
+						reminder.repeatTime = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						break;
+					case "daily":
+						reminder.repeatTime = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						reminder.date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+						break;
+					case "weekly":
+						reminder.date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+						reminder.repeatTime = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						now.setDate(now.getDate() + 7);
+						break;
+					case "monthly":
+						reminder.date = `${now.getFullYear()}-${String(now.getMonth() + 2).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+						reminder.repeatTime = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						break;
+					case "yearly":
+						reminder.date = `${now.getFullYear() + 1}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+						reminder.repeatTime = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						break;
+					default:
+						break;
+				}
+
+				const nextOccurrence = getNextOccurrence(reminder);
+
+				setRepeatedCountdowns((prevCountdowns) => {
+					const updatedCountdowns = {
+						...prevCountdowns,
+						[reminder.id]: formatCountdown(nextOccurrence - now),
+					};
+					return updatedCountdowns;
+				});
+
+				setReminders(updatedReminders);
+				await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+			} else {
+				console.warn(`Reminder with ID=${id} not found.`);
+			}
 		};
 
 		switch (activeTab) {
@@ -282,6 +337,7 @@ const App = () => {
 									{reminder.name} - {formatDateTime("", reminder.repeatTime)} - {repeatedCountdowns[reminder.id] || "Calculating..."}
 								</span>
 								<button onClick={() => handleDeleteReminder("repeated", reminder.id)}>Delete</button>
+								<button onClick={() => handleResetReminder(reminder.id)}>Reset</button>
 							</div>
 						))}
 					</div>
