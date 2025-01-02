@@ -42,12 +42,16 @@ const App = () => {
 			const updatedCountdowns = { ...countdowns };
 
 			reminders.oneTime.forEach((reminder, index) => {
-				const reminderTime = new Date(`${reminder.date}T${reminder.time}`);
+				const [year, month, day] = reminder.date.split("-");
+				const [hours, minutes] = reminder.time.split(":");
+				const reminderTime = new Date(year, month - 1, day, hours, minutes, 0);
+
 				if (now > reminderTime) {
 					updatedCountdowns[index] = { time: "Time's up!", notified: true };
 				} else {
 					const timeDiff = reminderTime - now;
 					updatedCountdowns[index] = { time: formatCountdown(timeDiff), notified: false };
+					console.log(updatedCountdowns[index]);
 				}
 			});
 
@@ -163,11 +167,17 @@ const App = () => {
 	};
 
 	const formatCountdown = (timeDiff) => {
+		const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
 		const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
 		const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
 		const seconds = Math.floor((timeDiff / 1000) % 60);
+		console.log(days, hours, minutes, seconds);
 
-		return `${hours}h ${minutes}m ${seconds}s`;
+		if (days > 0) {
+			return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+		} else {
+			return `${hours}h ${minutes}m ${seconds}s`;
+		}
 	};
 
 	const handleInputChange = (e) => {
@@ -240,6 +250,13 @@ const App = () => {
 	const renderTabContent = () => {
 		const now = new Date();
 
+		const handleDeleteReminder = async (type, index) => {
+			const updatedReminders = { ...reminders };
+			updatedReminders[type].splice(index, 1); // Remove the reminder from the list
+			setReminders(updatedReminders); // Update state
+			await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop }); // Persist changes
+		};
+
 		switch (activeTab) {
 			case "one-time":
 				return (
@@ -248,9 +265,14 @@ const App = () => {
 						{reminders.oneTime.map((reminder, index) => {
 							const reminderDate = new Date(`${reminder.date}T${reminder.time}`);
 							const isPastDue = now > reminderDate;
+							const countdownTime = countdowns[index]?.time || "Calculating...";
 							return (
-								<div key={index}>
-									{reminder.name} - {isPastDue ? "Time's up!" : formatDateTime(reminder.date, reminder.time)} {!isPastDue ? "- " + countdowns[index]?.time || "- Calculating..." : ""}
+								<div key={index} className="reminder-item">
+									<span>
+										{reminder.name} - {isPastDue ? "Time's up!" : formatDateTime(reminder.date, reminder.time)}
+										{!isPastDue ? ` - ${countdownTime}` : ""}
+									</span>
+									<button onClick={() => handleDeleteReminder("oneTime", index)}>Delete</button>
 								</div>
 							);
 						})}
@@ -261,9 +283,11 @@ const App = () => {
 					<div className="tab-content">
 						<h2>Repeated Reminders</h2>
 						{reminders.repeated.map((reminder, index) => (
-							<div key={index}>
-								{reminder.name} - {formatDateTime("", reminder.repeatTime)} - {countdowns[index]?.time || "Calculating..."}
-								{reminder.resetMode === "manual" && <button onClick={() => console.log("Reset TODO")}>Reset TODO</button>}
+							<div key={index} className="reminder-item">
+								<span>
+									{reminder.name} - {formatDateTime("", reminder.repeatTime)} - {countdowns[index]?.time || "Calculating..."}
+								</span>
+								<button onClick={() => handleDeleteReminder("repeated", index)}>Delete</button>
 							</div>
 						))}
 					</div>
