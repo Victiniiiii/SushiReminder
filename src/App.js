@@ -81,29 +81,76 @@ const App = () => {
 			} else {
 				nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
 			}
-		}
-
-		if (reminder.repeatFrequency === "daily") {
+		} else if (reminder.repeatFrequency === "daily") {
 			nextOccurrence.setDate(now.getDate() + 1);
 			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
 		} else if (reminder.repeatFrequency === "weekly") {
-			nextOccurrence.setDate(now.getDate() + 7);
-			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+			const daysOfWeek = [];
+			for (let i = 0; i < 7; i++) {
+				if (reminder[`day-${i}`]) {
+					daysOfWeek.push(i);
+				}
+			}
+
+			let daysToAdd = 0;
+			let validDayFound = false;
+
+			while (true) {
+				const candidateDate = new Date(now);
+				candidateDate.setDate(candidateDate.getDate() + daysToAdd);
+				const dayOfWeek = candidateDate.getDay();
+
+				if (daysOfWeek.includes(dayOfWeek)) {
+					if (daysToAdd === 0) {
+						const [reminderHour, reminderMinute] = reminder.repeatTime.split(":").map(Number);
+						if (reminderHour > now.getHours() || (reminderHour === now.getHours() && reminderMinute > now.getMinutes())) {
+							validDayFound = true;
+							nextOccurrence = candidateDate;
+						}
+					} else {
+						validDayFound = true;
+						nextOccurrence = candidateDate;
+					}
+				}
+
+				if (validDayFound) {
+					nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+					break;
+				}
+
+				daysToAdd++;
+			}
 		} else if (reminder.repeatFrequency === "monthly") {
 			nextOccurrence.setMonth(now.getMonth() + 1);
 			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
 		} else if (reminder.repeatFrequency === "yearly") {
-			nextOccurrence.setFullYear(now.getFullYear() + 1);
+			const repeatDateParts = reminder.repeatDate.split("-");
+			const repeatYear = now.getFullYear();
+			const repeatMonth = parseInt(repeatDateParts[1]) - 1;
+			const repeatDay = parseInt(repeatDateParts[2]);
+
+			nextOccurrence.setFullYear(repeatYear);
+			nextOccurrence.setMonth(repeatMonth);
+			nextOccurrence.setDate(repeatDay);
 			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+
+			if (nextOccurrence < now) {
+				nextOccurrence.setFullYear(repeatYear + 1);
+			}
 		}
 
 		return nextOccurrence;
 	};
 
+	const getDayOfWeek = (date) => {
+		const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+		return days[date.getDay()];
+	};
+
 	const handleCreateReminder = async () => {
 		const newReminder = { ...reminderData, id: uuidv4(), notified: false };
 
-		if (newReminder.name == "") {
+		if (newReminder.name === "") {
 			alert("Please give a name to this reminder.");
 			return;
 		}
@@ -122,7 +169,6 @@ const App = () => {
 		}
 
 		const updatedReminders = { ...reminders };
-
 		if (reminderType === "one-time") {
 			updatedReminders.oneTime.push(newReminder);
 		} else {
@@ -180,8 +226,13 @@ const App = () => {
 	};
 
 	const handleInputChange = (e) => {
-		const { name, value } = e.target;
-		setReminderData((prev) => ({ ...prev, [name]: value }));
+		const { name, value, type, checked } = e.target;
+
+		if (type === "checkbox") {
+			setReminderData((prev) => ({ ...prev, [name]: checked }));
+		} else {
+			setReminderData((prev) => ({ ...prev, [name]: value }));
+		}
 	};
 
 	const renderModalContent = () => {
@@ -224,10 +275,50 @@ const App = () => {
 									<option value="yearly">Yearly</option>
 								</select>
 							</label>
-							<label>
-								Time:
-								<input type="time" name="repeatTime" value={reminderData.repeatTime} onChange={handleInputChange} />
-							</label>
+							{reminderData.repeatFrequency === "hourly" || reminderData.repeatFrequency === "daily" ? (
+								<label>
+									Time:
+									<input type="time" name="repeatTime" value={reminderData.repeatTime} onChange={handleInputChange} />
+								</label>
+							) : null}
+							{reminderType === "repeated" && reminderData.repeatFrequency === "weekly" && (
+								<>
+									<label>Which days to repeat:</label>
+									<div>
+										{["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => (
+											<label key={index}>
+												<input type="checkbox" name={`day-${index}`} checked={reminderData[`day-${index}`] || false} onChange={handleInputChange} />
+												{day}
+											</label>
+										))}
+									</div>
+									<label>
+										Time:
+										<input type="time" name="repeatTime" value={reminderData.repeatTime} onChange={handleInputChange} />
+									</label>
+								</>
+							)}
+							{reminderType === "repeated" && reminderData.repeatFrequency === "monthly" && (
+								<>
+									<label>
+										Select Date:
+										<input type="date" name="repeatDate" value={reminderData.repeatDate} onChange={handleInputChange} />
+									</label>
+									<label>
+										Time:
+										<input type="time" name="repeatTime" value={reminderData.repeatTime} onChange={handleInputChange} />
+									</label>
+								</>
+							)}
+
+							{reminderType === "repeated" && reminderData.repeatFrequency === "yearly" && (
+								<>
+									<label>Yearly Reminder Date:</label>
+									<input type="date" name="repeatDate" value={reminderData.repeatDate} onChange={handleInputChange} />
+									<label>Time:</label>
+									<input type="time" name="repeatTime" value={reminderData.repeatTime} onChange={handleInputChange} />
+								</>
+							)}
 							<label>
 								Reset Mode:
 								<select name="resetMode" value={reminderData.resetMode} onChange={handleInputChange}>
@@ -237,6 +328,7 @@ const App = () => {
 							</label>
 						</>
 					)}
+
 					<div className="modal-actions">
 						<button onClick={handleCreateReminder}>Save</button>
 						<button onClick={() => setIsModalOpen(false)}>Cancel</button>
