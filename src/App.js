@@ -564,7 +564,7 @@ const App = () => {
 	return (
 		<div className="app">
 			<header className="header">
-				<h1>Remindauri</h1>
+				<h1>SushiReminder</h1>
 				<button className="create-button" onClick={() => setIsModalOpen(true)}>
 					Create Reminder
 				</button>
