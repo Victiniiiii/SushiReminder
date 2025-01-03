@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import { v4 as uuidv4 } from "uuid";
 import { readTextFile, writeTextFile, BaseDirectory, exists } from "@tauri-apps/plugin-fs";
-import { ensurePermission, notifyTheUser } from "./permission-notification.js";
+import { ensurePermission } from "./permissions.js";
 import { options } from "./systemTray.js";
 import { TrayIcon } from "@tauri-apps/api/tray";
+import { sendNotification } from "@tauri-apps/plugin-notification";
 
 const App = () => {
 	const [activeTab, setActiveTab] = useState("one-time");
@@ -59,7 +60,7 @@ const App = () => {
 				if (timeDiff <= 1000) {
 					newOneTimeCountdowns[reminder.id] = "Time's up!";
 					if (!reminder.notified) {
-						notifyTheUser(`Reminder: ${reminder.name}`);
+						sendNotification(`Reminder: ${reminder.name}`);
 						reminder.notified = true;
 					}
 				} else {
@@ -80,7 +81,7 @@ const App = () => {
 				if (timeDiff <= 1000) {
 					const handleReminderRestart = async () => {
 						if (!reminder.notified) {
-							notifyTheUser(`Reminder: ${reminder.name}`);
+							sendNotification(`Reminder: ${reminder.name}`);
 							reminder.notified = true;
 						}
 
