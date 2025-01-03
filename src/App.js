@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import { v4 as uuidv4 } from "uuid";
 import { readTextFile, writeTextFile, BaseDirectory, exists } from "@tauri-apps/plugin-fs";
-import { ensurePermission, notifyTheUser } from "./permissionnotification.js";
+import { ensurePermission, notifyTheUser } from "./permission-notification.js";
+import { options } from "./systemTray.js";
+import { TrayIcon } from "@tauri-apps/api/tray";
 
 const App = () => {
 	const [activeTab, setActiveTab] = useState("one-time");
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [reminderType, setReminderType] = useState("one-time");
+	const [trayExists, setTrayExists] = useState(false);
 	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
 	const [countdowns, setCountdowns] = useState({});
 	const [oneTimeCountdowns, setOneTimeCountdowns] = useState({});
@@ -19,10 +22,15 @@ const App = () => {
 		repeatFrequency: "hourly",
 		repeatTime: "",
 		resetMode: "manual",
+		customInterval: "",
 	});
 
 	useEffect(() => {
 		const loadReminders = async () => {
+			if (!trayExists) {
+				await TrayIcon.new(options);
+				setTrayExists(true);
+			}
 			await ensurePermission();
 			try {
 				if (await exists("reminders.json", { baseDir: BaseDirectory.Desktop })) {
@@ -48,20 +56,54 @@ const App = () => {
 				const reminderTime = new Date(`${reminder.date}T${reminder.time}`);
 				const timeDiff = reminderTime - now;
 
-				newOneTimeCountdowns[reminder.id] = timeDiff <= 0 ? "Time's up!" : formatCountdown(timeDiff);
+				if (timeDiff <= 1000) {
+					newOneTimeCountdowns[reminder.id] = "Time's up!";
+					if (!reminder.notified) {
+						notifyTheUser(`Reminder: ${reminder.name}`);
+						reminder.notified = true;
+					}
+				} else {
+					newOneTimeCountdowns[reminder.id] = formatCountdown(timeDiff);
+				}
 			});
 			setOneTimeCountdowns(newOneTimeCountdowns);
 
 			const newRepeatedCountdowns = { ...repeatedCountdowns };
+			const updatedReminders = { ...reminders };
+
 			reminders.repeated.forEach((reminder) => {
 				const nextOccurrence = getNextOccurrence(reminder);
 				const timeDiff = nextOccurrence - now;
 
-				newRepeatedCountdowns[reminder.id] = timeDiff <= 0 ? "Time's up!" : formatCountdown(timeDiff);
-			});
-			setRepeatedCountdowns(newRepeatedCountdowns);
+				console.log(timeDiff);
 
-			writeTextFile("reminders.json", JSON.stringify(reminders), { baseDir: BaseDirectory.Desktop });
+				if (timeDiff <= 1000) {
+					const handleReminderRestart = async () => {
+						if (!reminder.notified) {
+							notifyTheUser(`Reminder: ${reminder.name}`);
+							reminder.notified = true;
+						}
+
+						if (reminder.resetMode === "automatic") {
+							const newNextOccurrence = getNextOccurrence(reminder, true);
+							newRepeatedCountdowns[reminder.id] = formatCountdown(newNextOccurrence - now);
+							reminder.checked = false;
+						} else {
+							newRepeatedCountdowns[reminder.id] = "Time's up!";
+						}
+
+						reminder.notified = false;
+					};
+					handleReminderRestart();
+				} else if (!(newRepeatedCountdowns[reminder.id] == "Time's up!")) {
+					newRepeatedCountdowns[reminder.id] = formatCountdown(timeDiff);
+				}
+			});
+
+			setRepeatedCountdowns(newRepeatedCountdowns);
+			setReminders(updatedReminders);
+
+			writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
 		}, 1000);
 
 		return () => clearInterval(interval);
@@ -76,14 +118,21 @@ const App = () => {
 		const reminderMinute = parseInt(reminderTime[1]);
 
 		if (reminder.repeatFrequency === "hourly") {
-			if (now.getHours() > reminderHour || (now.getHours() === reminderHour && now.getMinutes() >= reminderMinute)) {
+			if (reminder.customInterval) {
+				nextOccurrence.setHours(now.getHours() + parseInt(reminder.customInterval), reminderMinute, 0, 0);
+			} else if (now.getHours() > reminderHour || (now.getHours() === reminderHour && now.getMinutes() >= reminderMinute)) {
 				nextOccurrence.setHours(now.getHours() + 1, reminderMinute, 0, 0);
 			} else {
 				nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
 			}
 		} else if (reminder.repeatFrequency === "daily") {
-			nextOccurrence.setDate(now.getDate() + 1);
-			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+			if (reminder.customInterval) {
+				nextOccurrence.setDate(now.getDate() + parseInt(reminder.customInterval));
+				nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+			} else {
+				nextOccurrence.setDate(now.getDate() + 1);
+				nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+			}
 		} else if (reminder.repeatFrequency === "weekly") {
 			const daysOfWeek = [];
 			for (let i = 0; i < 7; i++) {
@@ -186,6 +235,7 @@ const App = () => {
 			repeatFrequency: "hourly",
 			repeatTime: "",
 			resetMode: "manual",
+			customInterval: "",
 		});
 	};
 
@@ -236,6 +286,9 @@ const App = () => {
 	};
 
 	const renderModalContent = () => {
+		const currentDate = new Date().toISOString().split("T")[0];
+		const currentTime = new Date().toISOString().split("T")[1].slice(0, 5);
+
 		return (
 			<div className="modal">
 				<div className="modal-content">
@@ -255,11 +308,11 @@ const App = () => {
 						<>
 							<label>
 								Date:
-								<input type="date" name="date" value={reminderData.date} onChange={handleInputChange} />
+								<input type="date" name="date" value={reminderData.date || currentDate} onChange={handleInputChange} />
 							</label>
 							<label>
 								Time:
-								<input type="time" name="time" value={reminderData.time} onChange={handleInputChange} />
+								<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} />
 							</label>
 						</>
 					)}
@@ -276,10 +329,16 @@ const App = () => {
 								</select>
 							</label>
 							{reminderData.repeatFrequency === "hourly" || reminderData.repeatFrequency === "daily" ? (
-								<label>
-									Time:
-									<input type="time" name="repeatTime" value={reminderData.repeatTime} onChange={handleInputChange} />
-								</label>
+								<>
+									<label>
+										Time:
+										<input type="time" name="repeatTime" value={reminderData.repeatTime || currentTime} onChange={handleInputChange} />
+									</label>
+									<label>
+										Custom Interval (in hours/days):
+										<input type="number" name="customInterval" value={reminderData.customInterval || 1} onChange={handleInputChange} min="1" />
+									</label>
+								</>
 							) : null}
 							{reminderType === "repeated" && reminderData.repeatFrequency === "weekly" && (
 								<>
@@ -293,8 +352,12 @@ const App = () => {
 										))}
 									</div>
 									<label>
+										Custom Interval (in hours/days):
+										<input type="number" name="customInterval" value={reminderData.customInterval || 1} onChange={handleInputChange} min="1" />
+									</label>
+									<label>
 										Time:
-										<input type="time" name="repeatTime" value={reminderData.repeatTime} onChange={handleInputChange} />
+										<input type="time" name="repeatTime" value={reminderData.repeatTime || currentTime} onChange={handleInputChange} />
 									</label>
 								</>
 							)}
@@ -302,21 +365,20 @@ const App = () => {
 								<>
 									<label>
 										Select Date:
-										<input type="date" name="repeatDate" value={reminderData.repeatDate} onChange={handleInputChange} />
+										<input type="date" name="repeatDate" value={reminderData.repeatDate || currentDate} onChange={handleInputChange} />
 									</label>
 									<label>
 										Time:
-										<input type="time" name="repeatTime" value={reminderData.repeatTime} onChange={handleInputChange} />
+										<input type="time" name="repeatTime" value={reminderData.repeatTime || currentTime} onChange={handleInputChange} />
 									</label>
 								</>
 							)}
-
 							{reminderType === "repeated" && reminderData.repeatFrequency === "yearly" && (
 								<>
 									<label>Yearly Reminder Date:</label>
-									<input type="date" name="repeatDate" value={reminderData.repeatDate} onChange={handleInputChange} />
+									<input type="date" name="repeatDate" value={reminderData.repeatDate || currentDate} onChange={handleInputChange} />
 									<label>Time:</label>
-									<input type="time" name="repeatTime" value={reminderData.repeatTime} onChange={handleInputChange} />
+									<input type="time" name="repeatTime" value={reminderData.repeatTime || currentTime} onChange={handleInputChange} />
 								</>
 							)}
 							<label>
@@ -350,7 +412,6 @@ const App = () => {
 		};
 
 		const handleResetReminder = async (id) => {
-			console.log(`Resetting reminder with ID=${id}`);
 			const updatedReminders = { ...reminders };
 			const reminder = updatedReminders.repeated.find((reminder) => reminder.id === id);
 
@@ -361,6 +422,7 @@ const App = () => {
 				const currentHour = now.getHours();
 				const currentMinute = now.getMinutes();
 				const currentSecond = 0;
+				reminder.checked = false;
 
 				switch (reminder.repeatFrequency) {
 					case "hourly":
@@ -421,6 +483,17 @@ const App = () => {
 			}
 		};
 
+		const handleToggleCheckbox = async (id) => {
+			const updatedReminders = { ...reminders };
+			const reminder = updatedReminders.repeated.find((r) => r.id === id);
+
+			if (reminder) {
+				reminder.checked = !reminder.checked;
+				setReminders(updatedReminders);
+				await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+			}
+		};
+
 		switch (activeTab) {
 			case "one-time":
 				return (
@@ -455,6 +528,10 @@ const App = () => {
 								<span>
 									{reminder.name} - {formatDateTime("", reminder.repeatTime)} - {repeatedCountdowns[reminder.id] || "Calculating..."}
 								</span>
+								<label>
+									<input type="checkbox" checked={reminder.checked} onChange={() => handleToggleCheckbox(reminder.id)} />
+									Active
+								</label>
 								<button onClick={() => handleDeleteReminder("repeated", reminder.id)}>Delete</button>
 								<button onClick={() => handleResetReminder(reminder.id)}>Reset</button>
 								<button
