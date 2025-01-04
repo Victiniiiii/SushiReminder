@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import "./App.css";
 import { v4 as uuidv4 } from "uuid";
 import { readTextFile, writeTextFile, BaseDirectory, exists } from "@tauri-apps/plugin-fs";
 import { ensurePermission } from "./permissions.js";
 import { options } from "./systemTray.js";
 import { TrayIcon } from "@tauri-apps/api/tray";
 import { sendNotification } from "@tauri-apps/plugin-notification";
+import './index.css';
 
 const App = () => {
 	const [activeTab, setActiveTab] = useState("one-time");

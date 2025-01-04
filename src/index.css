@@ -12,3 +12,131 @@ body {
 code {
 	font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
+
+* {
+    box-sizing: border-box;
+    text-align: center;
+}
+
+body {
+	font-family: Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+	background-color: #f4f4f9;
+}
+
+.header {
+	background-color: #6200ea;
+	color: white;
+	padding-left: 40vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tabs {
+	display: flex;
+	justify-content: center;
+	background-color: #eee;
+	padding: 0.5rem 0;
+}
+
+.tabs button {
+	margin: 0 1rem;
+	padding: 0.5rem 1rem;
+	border: none;
+	background: none;
+	cursor: pointer;
+	font-size: 1rem;
+    border-bottom: 2px solid transparent;	
+}
+
+.tabs button:hover {
+	color: #6200ea;
+}
+
+.tabs .active {
+	color: #6200ea;
+	border-bottom: 2px solid #6200ea;
+    transition: color 0.3s, border-bottom 0.3s;
+}
+
+.tab-content {
+	padding: 2rem;
+}
+
+.create-button {
+	background-color: blue;
+	color: white;
+	border: 2px solid white;
+	border-radius: 3vw;
+    padding: 0 2vw;
+	cursor: pointer;
+	font-size: 2.5vw;
+	transition: background-color 0.3s;
+    height: 10vh;
+    margin: 0 2vw 0.35vh 2vw;
+}
+
+.create-button:hover {
+	background-color: darkblue;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    text-align: left;
+}
+
+.modal-content label {
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.modal-content input,
+.modal-content select {
+    width: 100%;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.modal-actions button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-actions button:first-child {
+    background-color: #6200ea;
+    color: white;
+}
+
+.modal-actions button:last-child {
+    background-color: #ccc;
+}
