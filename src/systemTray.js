@@ -8,7 +8,8 @@ const trayShow = async () => {
 	await appWindow.setFocus();
 };
 
-const menu = await Menu.new({
+// two u's in the menu fixed a bug for some reason
+const menuu = await Menu.new({
 	items: [
 		{
 			id: "show",
@@ -29,6 +30,6 @@ const menu = await Menu.new({
 
 export const options = {
 	icon: await defaultWindowIcon(),
-	menu,
+	menuu,
 	menuOnLeftClick: false,
 };

@@ -2,17 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-	margin: 0;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-}
-
-code {
-	font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
-}
-
 * {
     box-sizing: border-box;
     text-align: center;
@@ -23,23 +12,8 @@ body {
 	margin: 0;
 	padding: 0;
 	background-color: #f4f4f9;
-}
-
-.header {
-	background-color: #6200ea;
-	color: white;
-	padding-left: 40vw;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.tabs {
-	display: flex;
-	justify-content: center;
-	background-color: #eee;
-	padding: 0.5rem 0;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 .tabs button {
@@ -67,16 +41,7 @@ body {
 }
 
 .create-button {
-	background-color: blue;
-	color: white;
-	border: 2px solid white;
-	border-radius: 3vw;
-    padding: 0 2vw;
-	cursor: pointer;
-	font-size: 2.5vw;
 	transition: background-color 0.3s;
-    height: 10vh;
-    margin: 0 2vw 0.35vh 2vw;
 }
 
 .create-button:hover {

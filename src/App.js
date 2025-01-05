@@ -5,7 +5,8 @@ import { ensurePermission } from "./permissions.js";
 import { options } from "./systemTray.js";
 import { TrayIcon } from "@tauri-apps/api/tray";
 import { sendNotification } from "@tauri-apps/plugin-notification";
-import './index.css';
+import { Header, Navbar } from "./elements.js";
+import "./index.css";
 
 const App = () => {
 	const [activeTab, setActiveTab] = useState("one-time");
@@ -563,23 +564,8 @@ const App = () => {
 
 	return (
 		<div className="app">
-			<header className="header">
-				<h1 className="bg-teal-500">SushiReminder</h1>
-				<button className="create-button" onClick={() => setIsModalOpen(true)}>
-					Create Reminder
-				</button>
-			</header>
-			<nav className="tabs">
-				<button className={activeTab === "one-time" ? "active" : ""} onClick={() => setActiveTab("one-time")}>
-					One-Time Reminders
-				</button>
-				<button className={activeTab === "repeated" ? "active" : ""} onClick={() => setActiveTab("repeated")}>
-					Repeated Reminders
-				</button>
-				<button className={activeTab === "settings" ? "active" : ""} onClick={() => setActiveTab("settings")}>
-					Settings
-				</button>
-			</nav>
+			<Header setIsModalOpen={setIsModalOpen} />
+			<Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 			<main>{renderTabContent()}</main>
 			{isModalOpen && renderModalContent()}
 		</div>
