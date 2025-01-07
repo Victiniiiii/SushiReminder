@@ -22,3 +22,10 @@ export const Navbar = ({ activeTab, setActiveTab }) => (
 		</button>
 	</nav>
 );
+
+export const Settings = (
+	<div className="tab-content">
+		<h2>Settings</h2>
+		<p>Configure your preferences here.</p>
+	</div>
+);

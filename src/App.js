@@ -5,7 +5,7 @@ import { ensurePermission } from "./permissions.js";
 import { options } from "./systemTray.js";
 import { TrayIcon } from "@tauri-apps/api/tray";
 import { sendNotification } from "@tauri-apps/plugin-notification";
-import { Header, Navbar } from "./elements.js";
+import { Header, Navbar, Settings } from "./elements.js";
 import "./index.css";
 
 const App = () => {
@@ -552,10 +552,7 @@ const App = () => {
 				);
 			case "settings":
 				return (
-					<div className="tab-content">
-						<h2>Settings</h2>
-						<p>Configure your preferences here.</p>
-					</div>
+					{Settings}
 				);
 			default:
 				return null;
