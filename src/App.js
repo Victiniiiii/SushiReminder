@@ -292,14 +292,13 @@ const App = () => {
 		const currentTime = new Date().toISOString().split("T")[1].slice(0, 5);
 
 		return (
-			<div className="modal">
-				<div className="modal-content">
-					<h2>Create Reminder</h2>
-					<label>
+			<div className="fixed inset-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center ">
+				<div className="modal-content bg-white p-8 rounded-lg w-[90%] max-w-sm text-left max-h-[80vh] overflow-y-scroll flex items-stretch flex-col">
+					<label className="block mb-4">
 						Reminder Name:
 						<input type="text" name="name" value={reminderData.name} onChange={handleInputChange} />
 					</label>
-					<label>
+					<label className="block mb-4">
 						Reminder Type:
 						<select value={reminderType} onChange={(e) => setReminderType(e.target.value)}>
 							<option value="one-time">One-Time</option>
@@ -393,7 +392,7 @@ const App = () => {
 						</>
 					)}
 
-					<div className="modal-actions">
+					<div className="flex gap-4 mt-4 justify-end modal-actions">
 						<button onClick={handleCreateReminder}>Save</button>
 						<button onClick={() => setIsModalOpen(false)}>Cancel</button>
 					</div>
@@ -500,7 +499,6 @@ const App = () => {
 			case "one-time":
 				return (
 					<div className="tab-content">
-						<h2>One-Time Reminders</h2>
 						{reminders.oneTime.map((reminder) => (
 							<div key={reminder.id} className="reminder-item">
 								<span>
@@ -524,7 +522,6 @@ const App = () => {
 			case "repeated":
 				return (
 					<div className="tab-content">
-						<h2>Repeated Reminders</h2>
 						{reminders.repeated.map((reminder) => (
 							<div key={reminder.id} className="reminder-item">
 								<span>
@@ -551,7 +548,7 @@ const App = () => {
 					</div>
 				);
 			case "settings":
-				return <Settings/>
+				return <Settings />;
 			default:
 				return null;
 		}
