@@ -551,9 +551,7 @@ const App = () => {
 					</div>
 				);
 			case "settings":
-				return (
-					{Settings}
-				);
+				return <Settings/>
 			default:
 				return null;
 		}
