@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { readTextFile, writeTextFile, BaseDirectory, exists } from "@tauri-apps/plugin-fs";
-import { ensurePermission } from "./permissions.js";
-import { options } from "./systemTray.js";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { TrayIcon } from "@tauri-apps/api/tray";
 import { sendNotification } from "@tauri-apps/plugin-notification";
-import { Header, Navbar, Settings } from "./elements.js";
+import { Header, Navbar, Settings, Titlebar } from "./elements.js";
+import { options } from "./systemTray.js";
+import { ensurePermission } from "./permissions.js";
 import "./index.css";
 
 const App = () => {
-	const [activeTab, setActiveTab] = useState("one-time");
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [activeTab, setActiveTab] = useState("one-time");
 	const [reminderType, setReminderType] = useState("one-time");
 	const [trayExists, setTrayExists] = useState(false);
 	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
@@ -26,6 +27,10 @@ const App = () => {
 		resetMode: "manual",
 		customInterval: "",
 	});
+
+	const appWindow = getCurrentWindow();
+	document.getElementById("titlebar-minimize")?.addEventListener("click", () => appWindow.minimize());
+	document.getElementById("titlebar-close")?.addEventListener("click", () => appWindow.close());
 
 	useEffect(() => {
 		const loadReminders = async () => {
@@ -556,9 +561,12 @@ const App = () => {
 
 	return (
 		<div className="app">
-			<Header setIsModalOpen={setIsModalOpen} />
-			<Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
-			<main>{renderTabContent()}</main>
+			<Titlebar />
+			<main>
+				<Header setIsModalOpen={setIsModalOpen} />
+				<Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+				{renderTabContent()}
+			</main>
 			{isModalOpen && renderModalContent()}
 		</div>
 	);

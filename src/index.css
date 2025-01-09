@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 * {
-    box-sizing: border-box;
-    text-align: center;
+	box-sizing: border-box;
+	text-align: center;
 }
 
 body {
@@ -14,7 +14,7 @@ body {
 	background-color: #f4f4f9;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-    scrollbar-width: 0;
+	scrollbar-width: 0;
 }
 
 .tabs button {
@@ -24,7 +24,7 @@ body {
 	background: none;
 	cursor: pointer;
 	font-size: 1rem;
-    border-bottom: 2px solid transparent;	
+	border-bottom: 2px solid transparent;
 }
 
 .tabs button:hover {
@@ -34,7 +34,7 @@ body {
 .tabs .active {
 	color: #6200ea;
 	border-bottom: 2px solid #6200ea;
-    transition: color 0.3s, border-bottom 0.3s;
+	transition: color 0.3s, border-bottom 0.3s;
 }
 
 .tab-content {
@@ -51,47 +51,72 @@ body {
 
 .modal-content input,
 .modal-content select {
-    width: 100%;
-    padding: 0.5rem;
-    margin-top: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+	width: 100%;
+	padding: 0.5rem;
+	margin-top: 0.5rem;
+	border: 1px solid #ccc;
+	border-radius: 4px;
 }
 
 .modal-actions button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
 }
 
 .modal-actions button:first-child {
-    background-color: #6200ea;
-    color: white;
+	background-color: #6200ea;
+	color: white;
 }
 
 .modal-actions button:last-child {
-    background-color: #ccc;
+	background-color: #ccc;
 }
 
 .reminder-item {
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    align-items: center;
-    gap: 1vw;
-    margin-bottom: 5px;
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
+	gap: 1vw;
+	margin-bottom: 5px;
 }
 
 .reminder-item button {
-    background-color: chartreuse;
-    border-radius: 6px;
-    padding: 0 10px;
-    border: 1px solid black;
+	background-color: chartreuse;
+	border-radius: 6px;
+	padding: 0 10px;
+	border: 1px solid black;
 }
 
 .reminder-item label {
-    align-items: center;
-    display: flex;
-    gap: 5px
+	align-items: center;
+	display: flex;
+	gap: 5px;
+}
+
+.titlebar {
+	height: 30px;
+	background: rgb(197 181 205);
+	user-select: none;
+	display: flex;
+	justify-content: flex-end;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+
+.titlebar-button {
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+	width: 30px;
+	height: 30px;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.titlebar-button:hover {
+	background: #5bbec3;
 }

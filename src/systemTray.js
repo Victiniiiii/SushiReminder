@@ -1,5 +1,6 @@
 import { defaultWindowIcon } from "@tauri-apps/api/app";
 import { Menu } from "@tauri-apps/api/menu";
+import { TrayIcon } from "@tauri-apps/api/tray";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 const appWindow = getCurrentWindow();
@@ -22,6 +23,9 @@ const menuu = await Menu.new({
 			id: "quit",
 			text: "Quit",
 			action: () => {
+				while (TrayIcon) {
+					TrayIcon.destroy;
+				}
 				appWindow.destroy();
 			},
 		},
@@ -31,5 +35,4 @@ const menuu = await Menu.new({
 export const options = {
 	icon: await defaultWindowIcon(),
 	menuu,
-	menuOnLeftClick: false,
 };
