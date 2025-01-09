@@ -115,6 +115,7 @@ body {
 	height: 30px;
 	user-select: none;
 	-webkit-user-select: none;
+    cursor: pointer;
 }
 
 .titlebar-button:hover {

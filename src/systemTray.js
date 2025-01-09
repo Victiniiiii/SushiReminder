@@ -35,4 +35,5 @@ const menuu = await Menu.new({
 export const options = {
 	icon: await defaultWindowIcon(),
 	menuu,
+    menuOnLeftClick: true,
 };
