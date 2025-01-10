@@ -6,7 +6,6 @@
 		"@tauri-apps/api": "^2.1.1",
 		"@tauri-apps/plugin-fs": "^2.2.0",
 		"@tauri-apps/plugin-notification": "^2.2.0",
-		"auto-launch": "^5.0.6",
 		"cra-template": "^1.2.0",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",

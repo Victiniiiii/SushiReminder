@@ -10,14 +10,14 @@ import { ensurePermission } from "./permissions.js";
 import "./index.css";
 
 const App = () => {
-	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState("one-time");
 	const [reminderType, setReminderType] = useState("one-time");
+	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [trayExists, setTrayExists] = useState(false);
-	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
 	const [countdowns, setCountdowns] = useState({});
 	const [oneTimeCountdowns, setOneTimeCountdowns] = useState({});
 	const [repeatedCountdowns, setRepeatedCountdowns] = useState({});
+	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
 	const [reminderData, setReminderData] = useState({
 		name: "",
 		date: "",
