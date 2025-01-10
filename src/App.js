@@ -30,7 +30,7 @@ const App = () => {
 
 	const appWindow = getCurrentWindow();
 	document.getElementById("titlebar-minimize")?.addEventListener("click", () => appWindow.minimize());
-	document.getElementById("titlebar-close")?.addEventListener("click", () => appWindow.close());
+	document.getElementById("titlebar-close")?.addEventListener("click", () => appWindow.hide());
 
 	useEffect(() => {
 		const loadReminders = async () => {
@@ -81,8 +81,6 @@ const App = () => {
 			reminders.repeated.forEach((reminder) => {
 				const nextOccurrence = getNextOccurrence(reminder);
 				const timeDiff = nextOccurrence - now;
-
-				console.log(timeDiff);
 
 				if (timeDiff <= 1000) {
 					const handleReminderRestart = async () => {
