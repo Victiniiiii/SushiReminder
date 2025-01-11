@@ -102,22 +102,36 @@ body {
 	user-select: none;
 	display: flex;
 	justify-content: flex-end;
-	top: 0;
-	left: 0;
-	right: 0;
 }
 
-.titlebar-button {
-	display: inline-flex;
-	justify-content: center;
-	align-items: center;
+.hide-button {
+	font-size: 24px;
+	font-weight: bold;
+	color: black;
+	cursor: pointer;
+	display: inline-block;
 	width: 30px;
 	height: 30px;
-	user-select: none;
-	-webkit-user-select: none;
-    cursor: pointer;
+	text-align: center;
+	line-height: 30px;
 }
 
-.titlebar-button:hover {
-	background: #5bbec3;
+.hide-button:hover {
+	background-color: lightgray;
+}
+
+.close-button {
+	font-size: 24px;
+	font-weight: bold;
+	color: black;
+	cursor: pointer;
+	display: inline-block;
+	width: 30px;
+	height: 30px;
+	text-align: center;
+	line-height: 30px;
+}
+
+.close-button:hover {
+	background-color: lightgray;
 }

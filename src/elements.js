@@ -32,11 +32,11 @@ export const Settings = () => (
 
 export const Titlebar = () => (
 	<div data-tauri-drag-region className="titlebar" id="titlebar">
-		<div className="titlebar-button" id="titlebar-minimize">
-			<img src="https://api.iconify.design/mdi:window-minimize.svg" alt="minimize" />
+		<div className="close-button" id="titlebar-minimize">
+			&minus;
 		</div>
-		<div className="titlebar-button" id="titlebar-close">
-			<img src="https://api.iconify.design/mdi:close.svg" alt="close" />
+		<div className="hide-button" id="titlebar-close">
+			&times;
 		</div>
 	</div>
 );
