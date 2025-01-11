@@ -48,11 +48,11 @@ const App = () => {
 				});
 			});
 			try {
-				if (await exists("reminders.json", { baseDir: BaseDirectory.Desktop })) {
-					setReminders(JSON.parse(await readTextFile("reminders.json", { baseDir: BaseDirectory.Desktop })));
+				if (await exists("reminders.json", { baseDir: BaseDirectory.Document })) {
+					setReminders(JSON.parse(await readTextFile("reminders.json", { baseDir: BaseDirectory.Document })));
 				} else {
 					const initialData = JSON.stringify({ oneTime: [], repeated: [] });
-					await writeTextFile("reminders.json", initialData, { baseDir: BaseDirectory.Desktop });
+					await writeTextFile("reminders.json", initialData, { baseDir: BaseDirectory.Document });
 					setReminders(JSON.parse(initialData));
 				}
 			} catch (e) {
@@ -118,7 +118,7 @@ const App = () => {
 			setRepeatedCountdowns(newRepeatedCountdowns);
 			setReminders(updatedReminders);
 
-			writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+			writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Document });
 		}, 1000);
 
 		return () => clearInterval(interval);
@@ -128,12 +128,11 @@ const App = () => {
 		const now = new Date();
 		let nextOccurrence = new Date();
 
-		// Parse `reminder.date` if available, otherwise default to today
 		if (reminder.date) {
 			const lastDateParts = reminder.date.split("-");
 			nextOccurrence.setFullYear(parseInt(lastDateParts[0]), parseInt(lastDateParts[1]) - 1, parseInt(lastDateParts[2]));
 		} else {
-			reminder.date = now.toISOString().split("T")[0]; // Initialize date to today if missing
+			reminder.date = now.toISOString().split("T")[0];
 		}
 
 		const reminderTime = reminder.repeatTime.split(":");
@@ -146,7 +145,6 @@ const App = () => {
 		} else if (reminder.repeatFrequency === "daily") {
 			nextOccurrence.setDate(nextOccurrence.getDate() + (reminder.customInterval ? parseInt(reminder.customInterval) : 1));
 		} else if (reminder.repeatFrequency === "weekly") {
-			// Weekly logic: determine next valid day
 			let daysToAdd = 0;
 			const daysOfWeek = [];
 			for (let i = 0; i < 7; i++) if (reminder[`day-${i}`]) daysOfWeek.push(i);
@@ -191,7 +189,7 @@ const App = () => {
 		}
 
 		setReminders(updatedReminders);
-		await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+		await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Document });
 
 		setIsModalOpen(false);
 		setReminderData({
@@ -369,11 +367,10 @@ const App = () => {
 		const now = new Date();
 
 		const handleDeleteReminder = async (type, id) => {
-			console.log(`Deleting reminder: Type=${type}, ID=${id}`);
 			const updatedReminders = { ...reminders };
 			updatedReminders[type] = updatedReminders[type].filter((reminder) => reminder.id !== id);
 			setReminders(updatedReminders);
-			await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+			await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Document });
 		};
 
 		const handleResetReminder = async (id) => {
@@ -381,8 +378,6 @@ const App = () => {
 			const reminder = updatedReminders.repeated.find((reminder) => reminder.id === id);
 
 			if (reminder) {
-				console.log(`Reminder found:`, reminder);
-
 				const now = new Date();
 				const currentHour = now.getHours();
 				const currentMinute = now.getMinutes();
@@ -425,7 +420,7 @@ const App = () => {
 				});
 
 				setReminders(updatedReminders);
-				await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+				await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Document });
 			} else {
 				console.warn(`Reminder with ID=${id} not found.`);
 			}
@@ -437,13 +432,13 @@ const App = () => {
 			if (reminder) {
 				reminder.name = newName;
 				setReminders(updatedReminders);
-				writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+				writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Document });
 			} else {
 				const oneTimeReminder = updatedReminders.oneTime.find((reminder) => reminder.id === id);
 				if (oneTimeReminder) {
 					oneTimeReminder.name = newName;
 					setReminders(updatedReminders);
-					writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+					writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Document });
 				}
 			}
 		};
@@ -455,7 +450,7 @@ const App = () => {
 			if (reminder) {
 				reminder.checked = !reminder.checked;
 				setReminders(updatedReminders);
-				await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Desktop });
+				await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Document });
 			}
 		};
 

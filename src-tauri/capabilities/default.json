@@ -9,7 +9,7 @@
 		"fs:allow-create",
 		"fs:allow-read-text-file",
 		"fs:allow-exists",
-		"fs:allow-desktop-read",
+		"fs:allow-document-read",
 		"fs:allow-write",
 		"fs:allow-write-text-file",
 		"core:app:allow-default-window-icon",
