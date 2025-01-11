@@ -8,6 +8,8 @@ import { Header, Navbar, Settings, Titlebar } from "./elements.js";
 import { options } from "./systemTray.js";
 import { ensurePermission } from "./permissions.js";
 import "./index.css";
+import { register } from "@tauri-apps/plugin-global-shortcut";
+import { app } from "@tauri-apps/api";
 
 const App = () => {
 	const [activeTab, setActiveTab] = useState("one-time");
@@ -39,6 +41,12 @@ const App = () => {
 				setTrayExists(true);
 			}
 			await ensurePermission();
+			register("Shift+Alt+R", () => {
+				appWindow.unminimize().then(() => {
+					appWindow.show();
+					appWindow.setFocus();
+				});
+			});
 			try {
 				if (await exists("reminders.json", { baseDir: BaseDirectory.Desktop })) {
 					setReminders(JSON.parse(await readTextFile("reminders.json", { baseDir: BaseDirectory.Desktop })));

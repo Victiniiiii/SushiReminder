@@ -12,6 +12,7 @@ const menu = await Menu.new({
 			id: "show",
 			text: "Show",
 			action: () => {
+				appWindow.setFocus();
 				appWindow.show();
 			},
 		},
