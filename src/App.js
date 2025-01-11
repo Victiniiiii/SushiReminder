@@ -83,11 +83,13 @@ const App = () => {
 				const timeDiff = nextOccurrence - now;
 
 				if (timeDiff <= 1000) {
-					const handleReminderRestart = async () => {
+					const handleReminderRestart = async (reminder, now) => {
 						if (!reminder.notified) {
 							sendNotification(`Reminder: ${reminder.name}`);
 							reminder.notified = true;
 						}
+
+						reminder.date = now.toISOString().split("T")[0];
 
 						if (reminder.resetMode === "automatic") {
 							const newNextOccurrence = getNextOccurrence(reminder, true);
@@ -116,89 +118,40 @@ const App = () => {
 
 	const getNextOccurrence = (reminder) => {
 		const now = new Date();
-		let nextOccurrence = new Date(now);
+		let nextOccurrence = new Date();
+
+		// Parse `reminder.date` if available, otherwise default to today
+		if (reminder.date) {
+			const lastDateParts = reminder.date.split("-");
+			nextOccurrence.setFullYear(parseInt(lastDateParts[0]), parseInt(lastDateParts[1]) - 1, parseInt(lastDateParts[2]));
+		} else {
+			reminder.date = now.toISOString().split("T")[0]; // Initialize date to today if missing
+		}
 
 		const reminderTime = reminder.repeatTime.split(":");
 		const reminderHour = parseInt(reminderTime[0]);
 		const reminderMinute = parseInt(reminderTime[1]);
+		nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
 
 		if (reminder.repeatFrequency === "hourly") {
-			if (reminder.customInterval) {
-				nextOccurrence.setHours(now.getHours() + parseInt(reminder.customInterval), reminderMinute, 0, 0);
-			} else if (now.getHours() > reminderHour || (now.getHours() === reminderHour && now.getMinutes() >= reminderMinute)) {
-				nextOccurrence.setHours(now.getHours() + 1, reminderMinute, 0, 0);
-			} else {
-				nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
-			}
+			nextOccurrence.setHours(nextOccurrence.getHours() + (reminder.customInterval ? parseInt(reminder.customInterval) : 1));
 		} else if (reminder.repeatFrequency === "daily") {
-			if (reminder.customInterval) {
-				nextOccurrence.setDate(now.getDate() + parseInt(reminder.customInterval));
-				nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
-			} else {
-				nextOccurrence.setDate(now.getDate() + 1);
-				nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
-			}
+			nextOccurrence.setDate(nextOccurrence.getDate() + (reminder.customInterval ? parseInt(reminder.customInterval) : 1));
 		} else if (reminder.repeatFrequency === "weekly") {
-			const daysOfWeek = [];
-			for (let i = 0; i < 7; i++) {
-				if (reminder[`day-${i}`]) {
-					daysOfWeek.push(i);
-				}
-			}
-
+			// Weekly logic: determine next valid day
 			let daysToAdd = 0;
-			let validDayFound = false;
-
-			while (true) {
-				const candidateDate = new Date(now);
-				candidateDate.setDate(candidateDate.getDate() + daysToAdd);
-				const dayOfWeek = candidateDate.getDay();
-
-				if (daysOfWeek.includes(dayOfWeek)) {
-					if (daysToAdd === 0) {
-						const [reminderHour, reminderMinute] = reminder.repeatTime.split(":").map(Number);
-						if (reminderHour > now.getHours() || (reminderHour === now.getHours() && reminderMinute > now.getMinutes())) {
-							validDayFound = true;
-							nextOccurrence = candidateDate;
-						}
-					} else {
-						validDayFound = true;
-						nextOccurrence = candidateDate;
-					}
-				}
-
-				if (validDayFound) {
-					nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
-					break;
-				}
-
-				daysToAdd++;
+			const daysOfWeek = [];
+			for (let i = 0; i < 7; i++) if (reminder[`day-${i}`]) daysOfWeek.push(i);
+			while (!daysOfWeek.includes(nextOccurrence.getDay()) || nextOccurrence <= now) {
+				nextOccurrence.setDate(nextOccurrence.getDate() + 1);
 			}
 		} else if (reminder.repeatFrequency === "monthly") {
-			nextOccurrence.setMonth(now.getMonth() + 1);
-			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+			nextOccurrence.setMonth(nextOccurrence.getMonth() + 1);
 		} else if (reminder.repeatFrequency === "yearly") {
-			const repeatDateParts = reminder.repeatDate.split("-");
-			const repeatYear = now.getFullYear();
-			const repeatMonth = parseInt(repeatDateParts[1]) - 1;
-			const repeatDay = parseInt(repeatDateParts[2]);
-
-			nextOccurrence.setFullYear(repeatYear);
-			nextOccurrence.setMonth(repeatMonth);
-			nextOccurrence.setDate(repeatDay);
-			nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
-
-			if (nextOccurrence < now) {
-				nextOccurrence.setFullYear(repeatYear + 1);
-			}
+			nextOccurrence.setFullYear(nextOccurrence.getFullYear() + 1);
 		}
 
 		return nextOccurrence;
-	};
-
-	const getDayOfWeek = (date) => {
-		const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-		return days[date.getDay()];
 	};
 
 	const handleCreateReminder = async () => {
