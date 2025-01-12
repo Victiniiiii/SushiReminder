@@ -1,8 +1,8 @@
 {
 	"$schema": "https://schema.tauri.app/config/2.0.0-rc",
-	"productName": "sushiReminder",
+	"productName": "SushiReminder",
 	"version": "0.1.0",
-	"identifier": "com.mycompany.sushiReminder",
+	"identifier": "com.mycompany.SushiReminder",
 	"build": {
 		"devUrl": "http://localhost:3000",
 		"frontendDist": "../build",
