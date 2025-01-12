@@ -32,7 +32,7 @@ const App = () => {
 
 	const appWindow = getCurrentWindow();
 	document.getElementById("minimizeButton")?.addEventListener("click", () => appWindow.minimize());
-    document.getElementById("hideButton")?.addEventListener("click", () => appWindow.hide());
+	document.getElementById("hideButton")?.addEventListener("click", () => appWindow.hide());
 	document.getElementById("closeButton")?.addEventListener("click", () => appWindow.destroy());
 
 	useEffect(() => {
@@ -48,8 +48,8 @@ const App = () => {
 					appWindow.setFocus();
 				});
 			});
-            register("Shift+Alt+T", () => {
-				appWindow.destroy()
+			register("Shift+Alt+T", () => {
+				appWindow.destroy();
 			});
 			try {
 				if (await exists("reminders.json", { baseDir: BaseDirectory.Document })) {
@@ -78,7 +78,7 @@ const App = () => {
 				if (timeDiff <= 1000) {
 					newOneTimeCountdowns[reminder.id] = "Time's up!";
 					if (!reminder.notified) {
-						sendNotification(`Reminder: ${reminder.name}`);
+						sendNotification(`One Time Reminder: ${reminder.name}`);
 						reminder.notified = true;
 					}
 				} else {
@@ -97,8 +97,8 @@ const App = () => {
 				if (timeDiff <= 1000) {
 					const handleReminderRestart = async (reminder, now) => {
 						if (!reminder.notified) {
-							sendNotification(`Reminder: ${reminder.name}`);
 							reminder.notified = true;
+							sendNotification(`Repeated Reminder: ${reminder.name}`);
 						}
 
 						reminder.date = now.toISOString().split("T")[0];
@@ -110,8 +110,6 @@ const App = () => {
 						} else {
 							newRepeatedCountdowns[reminder.id] = "Time's up!";
 						}
-
-						reminder.notified = false;
 					};
 					handleReminderRestart(reminder, now);
 				} else if (!(newRepeatedCountdowns[reminder.id] == "Time's up!")) {
