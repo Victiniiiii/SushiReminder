@@ -109,7 +109,7 @@ const App = () => {
 
 						reminder.notified = false;
 					};
-					handleReminderRestart();
+					handleReminderRestart(reminder, now);
 				} else if (!(newRepeatedCountdowns[reminder.id] == "Time's up!")) {
 					newRepeatedCountdowns[reminder.id] = formatCountdown(timeDiff);
 				}
