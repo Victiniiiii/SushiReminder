@@ -104,8 +104,8 @@ body {
 	justify-content: flex-end;
 }
 
-.hide-button {
-	font-size: 24px;
+#titlebar div {
+    font-size: 24px;
 	font-weight: bold;
 	color: black;
 	cursor: pointer;
@@ -116,22 +116,10 @@ body {
 	line-height: 30px;
 }
 
-.hide-button:hover {
-	background-color: lightgray;
+#titlebar button:hover {
+    background-color: lightgray;
 }
 
-.close-button {
-	font-size: 24px;
-	font-weight: bold;
-	color: black;
-	cursor: pointer;
-	display: inline-block;
-	width: 30px;
-	height: 30px;
-	text-align: center;
-	line-height: 30px;
-}
-
-.close-button:hover {
-	background-color: lightgray;
+#hideButton {
+    margin: 5px 0 0 10px;
 }

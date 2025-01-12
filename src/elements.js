@@ -32,10 +32,17 @@ export const Settings = () => (
 
 export const Titlebar = () => (
 	<div data-tauri-drag-region className="titlebar" id="titlebar">
-		<div className="close-button" id="titlebar-minimize">
+		<div id="minimizeButton">
 			&minus;
 		</div>
-		<div className="hide-button" id="titlebar-close">
+		<div id="hideButton">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" stroke-width="2">
+				<path d="M15 12h3.586a1 1 0 0 1 .707 1.707l-6.586 6.586a1 1 0 0 1 -1.414 0l-6.586 -6.586a1 1 0 0 1 .707 -1.707h3.586v-3h6v3z"></path>
+				<path d="M15 3h-6"></path>
+				<path d="M15 6h-6"></path>
+			</svg>
+		</div>
+		<div id="closeButton">
 			&times;
 		</div>
 	</div>

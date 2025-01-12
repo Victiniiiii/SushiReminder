@@ -31,8 +31,9 @@ const App = () => {
 	});
 
 	const appWindow = getCurrentWindow();
-	document.getElementById("titlebar-minimize")?.addEventListener("click", () => appWindow.minimize());
-	document.getElementById("titlebar-close")?.addEventListener("click", () => appWindow.hide());
+	document.getElementById("minimizeButton")?.addEventListener("click", () => appWindow.minimize());
+    document.getElementById("hideButton")?.addEventListener("click", () => appWindow.hide());
+	document.getElementById("closeButton")?.addEventListener("click", () => appWindow.destroy());
 
 	useEffect(() => {
 		const loadReminders = async () => {
