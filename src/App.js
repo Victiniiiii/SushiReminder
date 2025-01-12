@@ -107,6 +107,7 @@ const App = () => {
 							const newNextOccurrence = getNextOccurrence(reminder, true);
 							newRepeatedCountdowns[reminder.id] = formatCountdown(newNextOccurrence - now);
 							reminder.checked = false;
+                            reminder.notified = false;
 						} else {
 							newRepeatedCountdowns[reminder.id] = "Time's up!";
 						}
