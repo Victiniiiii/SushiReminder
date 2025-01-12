@@ -48,6 +48,9 @@ const App = () => {
 					appWindow.setFocus();
 				});
 			});
+            register("Shift+Alt+T", () => {
+				appWindow.destroy()
+			});
 			try {
 				if (await exists("reminders.json", { baseDir: BaseDirectory.Document })) {
 					setReminders(JSON.parse(await readTextFile("reminders.json", { baseDir: BaseDirectory.Document })));
