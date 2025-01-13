@@ -483,21 +483,25 @@ const App = () => {
 				return (
 					<div className="tab-content">
 						{reminders.oneTime.map((reminder) => (
-							<div key={reminder.id} className="reminder-item">
-								<span>
-									{reminder.name} - {formatDateTime(reminder.date, reminder.time)} - {oneTimeCountdowns[reminder.id] || "Calculating..."}
-								</span>
-								<button onClick={() => handleDeleteReminder("oneTime", reminder.id)}>Delete</button>
-								<button
-									onClick={() => {
-										const newName = prompt("Enter new name:", reminder.name);
-										if (newName && newName.trim() !== "") {
-											handleRenameReminder(reminder.id, newName);
-										}
-									}}
-								>
-									Rename
-								</button>
+							<div key={reminder.id} className="reminder-item justify-between">
+								<div className="leftSide">
+									<span>
+										{reminder.name} - {formatDateTime(reminder.date, reminder.time)} - {oneTimeCountdowns[reminder.id] || "Calculating..."}
+									</span>
+								</div>
+								<div className="rightSide gap-2">
+									<button onClick={() => handleDeleteReminder("oneTime", reminder.id)}>Delete</button>
+									<button
+										onClick={() => {
+											const newName = prompt("Enter new name:", reminder.name);
+											if (newName && newName.trim() !== "") {
+												handleRenameReminder(reminder.id, newName);
+											}
+										}}
+									>
+										Rename
+									</button>
+								</div>
 							</div>
 						))}
 					</div>
@@ -506,26 +510,30 @@ const App = () => {
 				return (
 					<div className="tab-content">
 						{reminders.repeated.map((reminder) => (
-							<div key={reminder.id} className="reminder-item">
-								<span>
-									{reminder.name} - {formatDateTime("", reminder.time)} - {repeatedCountdowns[reminder.id] || "Calculating..."}
-								</span>
-								<label>
-									<input type="checkbox" checked={reminder.checked} onChange={() => handleToggleCheckbox(reminder.id)} />
-									Active
-								</label>
-								<button onClick={() => handleDeleteReminder("repeated", reminder.id)}>Delete</button>
-								<button onClick={() => handleResetReminder(reminder.id)}>Reset</button>
-								<button
-									onClick={() => {
-										const newName = prompt("Enter new name:", reminder.name);
-										if (newName && newName.trim() !== "") {
-											handleRenameReminder(reminder.id, newName);
-										}
-									}}
-								>
-									Rename
-								</button>
+							<div key={reminder.id} className="reminder-item justify-between">
+								<div className="flex justify-start">
+									<span>
+										{reminder.name} - {formatDateTime("", reminder.time)} - {repeatedCountdowns[reminder.id] || "Calculating..."}
+									</span>
+								</div>
+								<div className="flex justify-end gap-2">
+									<label>
+										<input type="checkbox" checked={reminder.checked} onChange={() => handleToggleCheckbox(reminder.id)} />
+										Active
+									</label>
+									<button onClick={() => handleDeleteReminder("repeated", reminder.id)}>Delete</button>
+									<button onClick={() => handleResetReminder(reminder.id)}>Reset</button>
+									<button
+										onClick={() => {
+											const newName = prompt("Enter new name:", reminder.name);
+											if (newName && newName.trim() !== "") {
+												handleRenameReminder(reminder.id, newName);
+											}
+										}}
+									>
+										Rename
+									</button>
+								</div>
 							</div>
 						))}
 					</div>
