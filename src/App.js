@@ -25,8 +25,7 @@ const App = () => {
 		date: "",
 		time: "",
 		repeatFrequency: "hourly",
-		repeatTime: "",
-		resetMode: "manual",
+        resetMode: "manual",
 		customInterval: "",
 	});
 
@@ -138,7 +137,7 @@ const App = () => {
 			reminder.date = now.toISOString().split("T")[0];
 		}
 
-		const reminderTime = reminder.repeatTime.split(":");
+		const reminderTime = reminder.time.split(":");
 		const reminderHour = parseInt(reminderTime[0]);
 		const reminderMinute = parseInt(reminderTime[1]);
 		nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
@@ -200,7 +199,6 @@ const App = () => {
 			date: "",
 			time: "",
 			repeatFrequency: "hourly",
-			repeatTime: "",
 			resetMode: "manual",
 			customInterval: "",
 		});
@@ -303,7 +301,7 @@ const App = () => {
 								<>
 									<label>
 										Time:
-										<input type="time" name="repeatTime" value={reminderData.repeatTime || currentTime} onChange={handleInputChange} />
+										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} />
 									</label>
 									<label>
 										Custom Interval (in hours/days):
@@ -328,7 +326,7 @@ const App = () => {
 									</label>
 									<label>
 										Time:
-										<input type="time" name="repeatTime" value={reminderData.repeatTime || currentTime} onChange={handleInputChange} />
+										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} />
 									</label>
 								</>
 							)}
@@ -340,7 +338,7 @@ const App = () => {
 									</label>
 									<label>
 										Time:
-										<input type="time" name="repeatTime" value={reminderData.repeatTime || currentTime} onChange={handleInputChange} />
+										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} />
 									</label>
 								</>
 							)}
@@ -349,7 +347,7 @@ const App = () => {
 									<label>Yearly Reminder Date:</label>
 									<input type="date" name="repeatDate" value={reminderData.repeatDate || currentDate} onChange={handleInputChange} />
 									<label>Time:</label>
-									<input type="time" name="repeatTime" value={reminderData.repeatTime || currentTime} onChange={handleInputChange} />
+									<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} />
 								</>
 							)}
 							<label>
@@ -394,24 +392,24 @@ const App = () => {
 
 				switch (reminder.repeatFrequency) {
 					case "hourly":
-						reminder.repeatTime = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 						break;
 					case "daily":
-						reminder.repeatTime = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 						reminder.date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 						break;
 					case "weekly":
 						reminder.date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-						reminder.repeatTime = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 						now.setDate(now.getDate() + 7);
 						break;
 					case "monthly":
 						reminder.date = `${now.getFullYear()}-${String(now.getMonth() + 2).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-						reminder.repeatTime = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 						break;
 					case "yearly":
 						reminder.date = `${now.getFullYear() + 1}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-						reminder.repeatTime = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 						break;
 					default:
 						break;
@@ -492,7 +490,7 @@ const App = () => {
 						{reminders.repeated.map((reminder) => (
 							<div key={reminder.id} className="reminder-item">
 								<span>
-									{reminder.name} - {formatDateTime("", reminder.repeatTime)} - {repeatedCountdowns[reminder.id] || "Calculating..."}
+									{reminder.name} - {formatDateTime("", reminder.time)} - {repeatedCountdowns[reminder.id] || "Calculating..."}
 								</span>
 								<label>
 									<input type="checkbox" checked={reminder.checked} onChange={() => handleToggleCheckbox(reminder.id)} />
