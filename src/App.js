@@ -107,7 +107,7 @@ const App = () => {
 							const newNextOccurrence = getNextOccurrence(reminder, true);
 							newRepeatedCountdowns[reminder.id] = formatCountdown(newNextOccurrence - now);
 							reminder.checked = false;
-                            reminder.notified = false;
+							reminder.notified = false;
 						} else {
 							newRepeatedCountdowns[reminder.id] = "Time's up!";
 						}
@@ -254,7 +254,12 @@ const App = () => {
 
 	const renderModalContent = () => {
 		const currentDate = new Date().toISOString().split("T")[0];
-		const currentTime = new Date().toISOString().split("T")[1].slice(0, 5);
+		const currentTime = new Intl.DateTimeFormat("en-US", {
+			hour: "2-digit",
+			minute: "2-digit",
+			hour12: false,
+			timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+		}).format(new Date());
 
 		return (
 			<div className="fixed inset-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center ">
