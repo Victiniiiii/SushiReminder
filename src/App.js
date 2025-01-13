@@ -25,7 +25,7 @@ const App = () => {
 		date: "",
 		time: "",
 		repeatFrequency: "hourly",
-        resetMode: "manual",
+		resetMode: "manual",
 		customInterval: "",
 	});
 
@@ -170,15 +170,33 @@ const App = () => {
 			return;
 		}
 
+		const now = new Date();
+
 		if (reminderType === "one-time") {
 			const selectedDateTime = new Date(`${newReminder.date}T${newReminder.time}`);
-			const now = new Date();
 
 			if (isNaN(selectedDateTime.getTime())) {
 				alert("Error: The provided date and time are invalid.");
 				return;
 			} else if (selectedDateTime < now) {
 				alert("Error: You cannot set a reminder in the past.");
+				return;
+			}
+		} else if (reminderType === "repeated") {
+			const customInterval = parseInt(newReminder.customInterval, 10) || 0;
+			const repeatTimeParts = newReminder.time.split(":");
+			const repeatHours = parseInt(repeatTimeParts[0], 10) || 0;
+			const repeatMinutes = parseInt(repeatTimeParts[1], 10) || 0;
+
+			let selectedDateTime = new Date();
+			selectedDateTime.setHours(repeatHours, repeatMinutes, 0, 0);
+
+			while (selectedDateTime < now) {
+				selectedDateTime.setMinutes(selectedDateTime.getMinutes() + customInterval);
+			}
+
+			if (isNaN(selectedDateTime.getTime())) {
+				alert("Error: The provided time or custom interval is invalid.");
 				return;
 			}
 		}
