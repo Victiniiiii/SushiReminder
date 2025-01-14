@@ -1,4 +1,7 @@
 import "./index.css";
+import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 export const Header = ({ setIsModalOpen }) => (
 	<header className="header items-center bg-[#6200ea] text-white flex justify-center text-center h-20">
