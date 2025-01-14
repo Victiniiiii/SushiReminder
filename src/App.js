@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { v4 as uuidv4 } from "uuid";
 import { readTextFile, writeTextFile, BaseDirectory, exists } from "@tauri-apps/plugin-fs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -270,6 +270,19 @@ const App = () => {
 		}
 	};
 
+	const onDragEnd = (result) => {
+		if (!result.destination) return;
+
+		const { source, destination } = result;
+		const updatedReminders = { ...reminders };
+		const movedReminder = updatedReminders[activeTab][source.index];
+
+		updatedReminders[activeTab].splice(source.index, 1);
+		updatedReminders[activeTab].splice(destination.index, 0, movedReminder);
+
+		setReminders(updatedReminders);
+	};
+
 	const renderModalContent = () => {
 		const currentDate = new Date().toISOString().split("T")[0];
 		const currentTime = new Intl.DateTimeFormat("en-US", {
@@ -480,66 +493,54 @@ const App = () => {
 			}
 		};
 
+		const renderReminders = (type) => (
+			<Droppable droppableId={type}>
+				{(provided) => (
+					<div {...provided.droppableProps} ref={provided.innerRef} className="tab-content">
+						{reminders[type].map((reminder, index) => (
+							<Draggable key={reminder.id} draggableId={reminder.id} index={index}>
+								{(provided) => (
+									<div {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} className="reminder-item justify-between">
+										<div className="leftSide">
+											<span>
+												{reminder.name} - {type === "oneTime" ? formatDateTime(reminder.date, reminder.time) : formatDateTime("", reminder.time)} - {type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating..."}
+											</span>
+										</div>
+										<div className="rightSide gap-2">
+											{type === "repeated" && (
+												<label>
+													<input type="checkbox" checked={reminder.checked} onChange={() => handleToggleCheckbox(reminder.id)} />
+													Active
+												</label>
+											)}
+											<button onClick={() => handleDeleteReminder(type, reminder.id)}>Delete</button>
+											{type === "repeated" && <button onClick={() => handleResetReminder(reminder.id)}>Reset</button>}
+											<button
+												onClick={() => {
+													const newName = prompt("Enter new name:", reminder.name);
+													if (newName && newName.trim() !== "") {
+														handleRenameReminder(reminder.id, newName);
+													}
+												}}
+											>
+												Rename
+											</button>
+										</div>
+									</div>
+								)}
+							</Draggable>
+						))}
+						{provided.placeholder}
+					</div>
+				)}
+			</Droppable>
+		);
+
 		switch (activeTab) {
 			case "one-time":
-				return (
-					<div className="tab-content">
-						{reminders.oneTime.map((reminder) => (
-							<div key={reminder.id} className="reminder-item justify-between">
-								<div className="leftSide">
-									<span>
-										{reminder.name} - {formatDateTime(reminder.date, reminder.time)} - {oneTimeCountdowns[reminder.id] || "Calculating..."}
-									</span>
-								</div>
-								<div className="rightSide gap-2">
-									<button onClick={() => handleDeleteReminder("oneTime", reminder.id)}>Delete</button>
-									<button
-										onClick={() => {
-											const newName = prompt("Enter new name:", reminder.name);
-											if (newName && newName.trim() !== "") {
-												handleRenameReminder(reminder.id, newName);
-											}
-										}}
-									>
-										Rename
-									</button>
-								</div>
-							</div>
-						))}
-					</div>
-				);
+				return <DragDropContext onDragEnd={onDragEnd}>{renderReminders("oneTime")}</DragDropContext>;
 			case "repeated":
-				return (
-					<div className="tab-content">
-						{reminders.repeated.map((reminder) => (
-							<div key={reminder.id} className="reminder-item justify-between">
-								<div className="flex justify-start">
-									<span>
-										{reminder.name} - {formatDateTime("", reminder.time)} - {repeatedCountdowns[reminder.id] || "Calculating..."}
-									</span>
-								</div>
-								<div className="flex justify-end gap-2">
-									<label>
-										<input type="checkbox" checked={reminder.checked} onChange={() => handleToggleCheckbox(reminder.id)} />
-										Active
-									</label>
-									<button onClick={() => handleDeleteReminder("repeated", reminder.id)}>Delete</button>
-									<button onClick={() => handleResetReminder(reminder.id)}>Reset</button>
-									<button
-										onClick={() => {
-											const newName = prompt("Enter new name:", reminder.name);
-											if (newName && newName.trim() !== "") {
-												handleRenameReminder(reminder.id, newName);
-											}
-										}}
-									>
-										Rename
-									</button>
-								</div>
-							</div>
-						))}
-					</div>
-				);
+				return <DragDropContext onDragEnd={onDragEnd}>{renderReminders("repeated")}</DragDropContext>;
 			case "settings":
 				return <Settings />;
 			default:
