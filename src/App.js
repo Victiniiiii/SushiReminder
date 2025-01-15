@@ -497,39 +497,68 @@ const App = () => {
 			<Droppable droppableId={type}>
 				{(provided) => (
 					<div {...provided.droppableProps} ref={provided.innerRef} className="tab-content">
-						{reminders[type].map((reminder, index) => (
-							<Draggable key={reminder.id} draggableId={reminder.id} index={index}>
-								{(provided) => (
-									<div {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} className="reminder-item justify-between">
-										<div className="leftSide">
-											<span>
-												{reminder.name} - {type === "oneTime" ? formatDateTime(reminder.date, reminder.time) : formatDateTime("", reminder.time)} - {type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating..."}
-											</span>
+						{reminders[type]
+							.slice()
+							.sort((a, b) => {
+								const getTimeRemaining = (reminder) => {
+									const countdown = type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating...";
+									if (countdown === "Time's up!") return -Infinity;
+									if (countdown === "Calculating...") return Infinity;
+									return parseTimeRemaining(countdown);
+								};
+
+								const parseTimeRemaining = (countdown) => {
+									const timeParts = countdown.match(/(\d+)\s*(\w+)/);
+									if (!timeParts) return Infinity;
+									const [_, value, unit] = timeParts;
+									const multiplier = {
+										second: 1,
+										seconds: 1,
+										minute: 60,
+										minutes: 60,
+										hour: 3600,
+										hours: 3600,
+										day: 86400,
+										days: 86400,
+									};
+									return parseInt(value, 10) * (multiplier[unit.toLowerCase()] || Infinity);
+								};
+
+								return getTimeRemaining(a) - getTimeRemaining(b);
+							})
+							.map((reminder, index) => (
+								<Draggable key={reminder.id} draggableId={reminder.id} index={index}>
+									{(provided) => (
+										<div {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} className="reminder-item justify-between">
+											<div className="leftSide">
+												<span>
+													{reminder.name} - {type === "oneTime" ? formatDateTime(reminder.date, reminder.time) : formatDateTime("", reminder.time)} - {type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating..."}
+												</span>
+											</div>
+											<div className="rightSide gap-2 flex">
+												{type === "repeated" && (
+													<label>
+														<input type="checkbox" checked={reminder.checked} onChange={() => handleToggleCheckbox(reminder.id)} />
+														Active
+													</label>
+												)}
+												<button onClick={() => handleDeleteReminder(type, reminder.id)}>Delete</button>
+												{type === "repeated" && <button onClick={() => handleResetReminder(reminder.id)}>Reset</button>}
+												<button
+													onClick={() => {
+														const newName = prompt("Enter new name:", reminder.name);
+														if (newName && newName.trim() !== "") {
+															handleRenameReminder(reminder.id, newName);
+														}
+													}}
+												>
+													Rename
+												</button>
+											</div>
 										</div>
-										<div className="rightSide gap-2">
-											{type === "repeated" && (
-												<label>
-													<input type="checkbox" checked={reminder.checked} onChange={() => handleToggleCheckbox(reminder.id)} />
-													Active
-												</label>
-											)}
-											<button onClick={() => handleDeleteReminder(type, reminder.id)}>Delete</button>
-											{type === "repeated" && <button onClick={() => handleResetReminder(reminder.id)}>Reset</button>}
-											<button
-												onClick={() => {
-													const newName = prompt("Enter new name:", reminder.name);
-													if (newName && newName.trim() !== "") {
-														handleRenameReminder(reminder.id, newName);
-													}
-												}}
-											>
-												Rename
-											</button>
-										</div>
-									</div>
-								)}
-							</Draggable>
-						))}
+									)}
+								</Draggable>
+							))}
 						{provided.placeholder}
 					</div>
 				)}
