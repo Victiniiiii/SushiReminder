@@ -1,7 +1,7 @@
 import "./index.css";
-import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import React, { useState } from "react";
+import ReactDOM from "react-dom";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 export const Header = ({ setIsModalOpen }) => (
 	<header className="header items-center bg-[#6200ea] text-white flex justify-center text-center h-20">
@@ -26,18 +26,15 @@ export const Navbar = ({ activeTab, setActiveTab }) => (
 	</nav>
 );
 
-export const Settings = () => (
+export const Settings = ({ sortBy, setSortBy }) => (
 	<div className="tab-content">
-		<p>Configure your preferences here.</p>
-		<p>Coming soon...</p>
+		<button onClick={() => setSortBy(sortBy === "time" ? "name" : "time")}>Sort by: {sortBy === "time" ? "Name" : "Time"}</button>
 	</div>
 );
 
 export const Titlebar = () => (
 	<div data-tauri-drag-region className="titlebar" id="titlebar">
-		<div id="minimizeButton">
-			&minus;
-		</div>
+		<div id="minimizeButton">&minus;</div>
 		<div id="hideButton">
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" stroke-width="2">
 				<path d="M15 12h3.586a1 1 0 0 1 .707 1.707l-6.586 6.586a1 1 0 0 1 -1.414 0l-6.586 -6.586a1 1 0 0 1 .707 -1.707h3.586v-3h6v3z"></path>
@@ -45,8 +42,6 @@ export const Titlebar = () => (
 				<path d="M15 6h-6"></path>
 			</svg>
 		</div>
-		<div id="closeButton">
-			&times;
-		</div>
+		<div id="closeButton">&times;</div>
 	</div>
 );

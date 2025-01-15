@@ -16,6 +16,7 @@ import { app } from "@tauri-apps/api";
 const App = () => {
 	const [activeTab, setActiveTab] = useState("one-time");
 	const [reminderType, setReminderType] = useState("one-time");
+    const [sortBy, setSortBy] = useState("time");
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [trayExists, setTrayExists] = useState(false);
 	const [countdowns, setCountdowns] = useState({});
@@ -493,40 +494,48 @@ const App = () => {
 			}
 		};
 
-		const renderReminders = (type) => (
-			<Droppable droppableId={type}>
-				{(provided) => (
-					<div {...provided.droppableProps} ref={provided.innerRef} className="tab-content">
-						{reminders[type]
-							.slice()
-							.sort((a, b) => {
-								const getTimeRemaining = (reminder) => {
-									const countdown = type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating...";
-									if (countdown === "Time's up!") return -Infinity;
-									if (countdown === "Calculating...") return Infinity;
-									return parseTimeRemaining(countdown);
-								};
+		const renderReminders = (type, sortBy) => {
+			const sortReminders = (reminders) => {
+				const sortedReminders = reminders.slice();
+				if (sortBy === "time") {
+					sortedReminders.sort((a, b) => {
+						const getTimeRemaining = (reminder) => {
+							const countdown = type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating...";
+							if (countdown === "Time's up!") return -Infinity;
+							if (countdown === "Calculating...") return Infinity;
+							return parseTimeRemaining(countdown);
+						};
 
-								const parseTimeRemaining = (countdown) => {
-									const timeParts = countdown.match(/(\d+)\s*(\w+)/);
-									if (!timeParts) return Infinity;
-									const [_, value, unit] = timeParts;
-									const multiplier = {
-										second: 1,
-										seconds: 1,
-										minute: 60,
-										minutes: 60,
-										hour: 3600,
-										hours: 3600,
-										day: 86400,
-										days: 86400,
-									};
-									return parseInt(value, 10) * (multiplier[unit.toLowerCase()] || Infinity);
-								};
+						const parseTimeRemaining = (countdown) => {
+							const timeParts = countdown.match(/(\d+)\s*(\w+)/);
+							if (!timeParts) return Infinity;
+							const [_, value, unit] = timeParts;
+							const multiplier = {
+								second: 1,
+								seconds: 1,
+								minute: 60,
+								minutes: 60,
+								hour: 3600,
+								hours: 3600,
+								day: 86400,
+								days: 86400,
+							};
+							return parseInt(value, 10) * (multiplier[unit.toLowerCase()] || Infinity);
+						};
 
-								return getTimeRemaining(a) - getTimeRemaining(b);
-							})
-							.map((reminder, index) => (
+						return getTimeRemaining(a) - getTimeRemaining(b);
+					});
+				} else if (sortBy === "name") {
+					sortedReminders.sort((a, b) => a.name.localeCompare(b.name));
+				}
+				return sortedReminders;
+			};
+
+			return (
+				<Droppable droppableId={type}>
+					{(provided) => (
+						<div {...provided.droppableProps} ref={provided.innerRef} className="tab-content">
+							{sortReminders(reminders[type]).map((reminder, index) => (
 								<Draggable key={reminder.id} draggableId={reminder.id} index={index}>
 									{(provided) => (
 										<div {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} className="reminder-item justify-between">
@@ -559,11 +568,12 @@ const App = () => {
 									)}
 								</Draggable>
 							))}
-						{provided.placeholder}
-					</div>
-				)}
-			</Droppable>
-		);
+							{provided.placeholder}
+						</div>
+					)}
+				</Droppable>
+			);
+		};
 
 		switch (activeTab) {
 			case "one-time":
@@ -571,7 +581,7 @@ const App = () => {
 			case "repeated":
 				return <DragDropContext onDragEnd={onDragEnd}>{renderReminders("repeated")}</DragDropContext>;
 			case "settings":
-				return <Settings />;
+				return <Settings sortBy={sortBy} setSortBy={setSortBy} />;
 			default:
 				return null;
 		}
