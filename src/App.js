@@ -127,7 +127,7 @@ const App = () => {
 		}, 1000);
 
 		return () => clearInterval(interval);
-	}, [reminders, oneTimeCountdowns, repeatedCountdowns]);
+	}, [reminders, oneTimeCountdowns, repeatedCountdowns]); // test
 
 	const getNextOccurrence = (reminder) => {
 		const now = new Date();
