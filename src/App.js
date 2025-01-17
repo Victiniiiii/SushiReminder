@@ -487,36 +487,50 @@ const App = () => {
 			}
 		};
 
-		const renderReminders = (type, sortBy) => {
+		const parseTimeRemaining = (countdown) => {
+			if (typeof countdown !== "string") return Infinity;
+			const timeParts = countdown.match(/(\d+)\s*(\w+)/);
+			if (!timeParts) return Infinity;
+
+			const [_, value, unit] = timeParts;
+			const unitToSeconds = {
+				second: 1,
+				seconds: 1,
+				minute: 60,
+				minutes: 60,
+				hour: 3600,
+				hours: 3600,
+				day: 86400,
+				days: 86400,
+			};
+
+			return parseInt(value, 10) * (unitToSeconds[unit.toLowerCase()] || Infinity);
+		};
+
+		const renderReminders = (type) => {
 			const sortReminders = (reminders) => {
 				const sortedReminders = reminders.slice();
+
 				if (sortBy === "time") {
 					sortedReminders.sort((a, b) => {
 						const getTimeRemaining = (reminder) => {
 							const countdown = type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating...";
+
 							if (countdown === "Time's up!") return -Infinity;
 							if (countdown === "Calculating...") return Infinity;
-							return parseTimeRemaining(countdown);
+
+							const nextOccurrence = getNextOccurrence(reminder);
+							const now = new Date();
+
+							const timeDiffSeconds = Math.max((nextOccurrence - now) / 1000, 0);
+							console.log(`Reminder: ${reminder.name}, Next Occurrence: ${nextOccurrence}, Time Diff: ${timeDiffSeconds} seconds`);
+
+							return timeDiffSeconds;
 						};
 
-						const parseTimeRemaining = (countdown) => {
-							const timeParts = countdown.match(/(\d+)\s*(\w+)/);
-							if (!timeParts) return Infinity;
-							const [_, value, unit] = timeParts;
-							const multiplier = {
-								second: 1,
-								seconds: 1,
-								minute: 60,
-								minutes: 60,
-								hour: 3600,
-								hours: 3600,
-								day: 86400,
-								days: 86400,
-							};
-							return parseInt(value, 10) * (multiplier[unit.toLowerCase()] || Infinity);
-						};
-
-						return getTimeRemaining(a) - getTimeRemaining(b);
+						const timeA = getTimeRemaining(a);
+						const timeB = getTimeRemaining(b);
+						return timeA - timeB;
 					});
 				} else if (sortBy === "name") {
 					sortedReminders.sort((a, b) => a.name.localeCompare(b.name));
