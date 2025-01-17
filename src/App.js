@@ -16,7 +16,7 @@ import "./index.css";
 const App = () => {
 	const [activeTab, setActiveTab] = useState("one-time");
 	const [reminderType, setReminderType] = useState("one-time");
-	const [sortBy, setSortBy] = useState("time");
+	const [sortBy, setSortBy] = useState("custom");
 	const [isDarkMode, setIsDarkMode] = useState(true);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [trayExists, setTrayExists] = useState(false);
@@ -521,9 +521,7 @@ const App = () => {
 
 							const nextOccurrence = getNextOccurrence(reminder);
 							const now = new Date();
-
 							const timeDiffSeconds = Math.max((nextOccurrence - now) / 1000, 0);
-							console.log(`Reminder: ${reminder.name}, Next Occurrence: ${nextOccurrence}, Time Diff: ${timeDiffSeconds} seconds`);
 
 							return timeDiffSeconds;
 						};

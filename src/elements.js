@@ -49,19 +49,20 @@ export const Settings = ({ sortBy, setSortBy, isDarkMode, setIsDarkMode }) => (
 		<div className="flex items-center space-x-4">
 			<span>Sort by:</span>
 			<span className={`${sortBy === "name" ? "text-green-500" : "text-gray-500"}`}>Name</span>
-			<div className={`relative inline-block w-12 h-6 ${isDarkMode ? "bg-gray-600" : "bg-gray-300"} rounded-full cursor-pointer`} onClick={() => setSortBy(sortBy === "time" ? "name" : "time")}>
-				<div className={`absolute top-1 left-1 w-4 h-4 ${isDarkMode ? "bg-gray-900" : "bg-white"} rounded-full transition-transform duration-200 ${sortBy === "time" ? "transform translate-x-6" : ""}`}></div>
-			</div>
 			<span className={`${sortBy === "time" ? "text-green-500" : "text-gray-500"}`}>Time</span>
+			<span className={`${sortBy === "custom" ? "text-green-500" : "text-gray-500"}`}>Custom</span>
+			<div className={`relative inline-block w-16 h-6 ${isDarkMode ? "bg-gray-600" : "bg-gray-300"} rounded-full cursor-pointer`} onClick={() => setSortBy(sortBy === "name" ? "time" : sortBy === "time" ? "custom" : "name")}>
+				<div className={`absolute top-1 left-1 w-4 h-4 ${isDarkMode ? "bg-gray-900" : "bg-white"} rounded-full transition-transform duration-200 ${sortBy === "time" ? "transform translate-x-5" : sortBy === "custom" ? "transform translate-x-10" : ""}`}></div>
+			</div>
 		</div>
 
 		<div className="flex items-center space-x-4">
 			<span>UI Theme:</span>
 			<span className={`${isDarkMode ? "text-green-500" : "text-gray-500"}`}>Light</span>
+			<span className={`${!isDarkMode ? "text-green-500" : "text-gray-500"}`}>Dark</span>
 			<div className={`relative inline-block w-12 h-6 ${isDarkMode ? "bg-gray-600" : "bg-gray-300"} rounded-full cursor-pointer`} onClick={() => setIsDarkMode(!isDarkMode)}>
 				<div className={`absolute top-1 left-1 w-4 h-4 ${isDarkMode ? "bg-gray-900" : "bg-white"} rounded-full transition-transform duration-200 ${isDarkMode ? "transform translate-x-6" : ""}`}></div>
 			</div>
-			<span className={`${!isDarkMode ? "text-green-500" : "text-gray-500"}`}>Dark</span>
 		</div>
 	</div>
 );
