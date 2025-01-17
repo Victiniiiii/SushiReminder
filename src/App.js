@@ -25,10 +25,10 @@ const App = () => {
 	const [oneTimeCountdowns, setOneTimeCountdowns] = useState({});
 	const [repeatedCountdowns, setRepeatedCountdowns] = useState({});
 	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
-	const [reminderData, setReminderData] = useState({
+    const [reminderData, setReminderData] = useState({
 		name: "",
-		date: "",
-		time: "",
+		date: (new Date().toISOString().split('T')[0]),
+		time: (new Date().toTimeString().slice(0, 5)),
 		repeatFrequency: "hourly",
 		resetMode: "manual",
 		customInterval: "",
@@ -177,6 +177,8 @@ const App = () => {
 
 		if (reminderType === "one-time") {
 			const selectedDateTime = new Date(`${reminderData.date}T${reminderData.time}`);
+			console.log(reminderData);
+			console.log(selectedDateTime);
 			if (isNaN(selectedDateTime.getTime())) {
 				alert("Error: The provided date and time are invalid.");
 				return;
