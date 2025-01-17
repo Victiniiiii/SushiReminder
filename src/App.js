@@ -17,6 +17,7 @@ const App = () => {
 	const [activeTab, setActiveTab] = useState("one-time");
 	const [reminderType, setReminderType] = useState("one-time");
 	const [sortBy, setSortBy] = useState("time");
+	const [isDarkMode, setIsDarkMode] = useState(true);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [trayExists, setTrayExists] = useState(false);
 	const [modalOpen, setModalOpen] = useState(false);
@@ -25,10 +26,10 @@ const App = () => {
 	const [oneTimeCountdowns, setOneTimeCountdowns] = useState({});
 	const [repeatedCountdowns, setRepeatedCountdowns] = useState({});
 	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
-    const [reminderData, setReminderData] = useState({
+	const [reminderData, setReminderData] = useState({
 		name: "",
-		date: (new Date().toISOString().split('T')[0]),
-		time: (new Date().toTimeString().slice(0, 5)),
+		date: new Date().toISOString().split("T")[0],
+		time: new Date().toTimeString().slice(0, 5),
 		repeatFrequency: "hourly",
 		resetMode: "manual",
 		customInterval: "",
@@ -574,18 +575,25 @@ const App = () => {
 			case "repeated":
 				return <DragDropContext onDragEnd={onDragEnd}>{renderReminders("repeated")}</DragDropContext>;
 			case "settings":
-				return <Settings sortBy={sortBy} setSortBy={setSortBy} />;
+				return <Settings sortBy={sortBy} setSortBy={setSortBy} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />;
 			default:
 				return null;
 		}
 	};
 
 	return (
-		<div className="app">
-			<Titlebar />
+		<div
+			className={`${isDarkMode ? "dark" : "light"} w-[100dvw] h-[100dvh] ${isDarkMode ? "text-white" : "text-black"}`}
+			style={{
+				background: isDarkMode
+					? "radial-gradient(at 24% 32%, #111111 0px, transparent 50%), radial-gradient(at 80% 28%, #010710 0px, transparent 50%), radial-gradient(at 12% 93%, #0d0400 0px, transparent 50%), radial-gradient(at 59% 74%, #1b1221 0px, transparent 50%), #000000"
+					: "radial-gradient(at 24% 32%, #9fb5b5 0px, transparent 50%), radial-gradient(at 80% 28%, #9bc0f9 0px, transparent 50%), radial-gradient(at 12% 93%, #ffceb9 0px, transparent 50%), radial-gradient(at 59% 74%, #c8b4d6 0px, transparent 50%), #ffffff",
+			}}
+		>
+			<Titlebar isDarkMode={isDarkMode} />
 			<main>
-				<Header setIsModalOpen={setIsModalOpen} />
-				<Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+				<Header setIsModalOpen={setIsModalOpen} isDarkMode={isDarkMode} />
+				<Navbar activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} />
 				{renderTabContent()}
 			</main>
 			{isModalOpen && renderModalContent()}
