@@ -304,15 +304,15 @@ const App = () => {
 		}).format(new Date());
 
 		return (
-			<div className="fixed inset-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center ">
-				<div className="modal-content bg-white p-8 rounded-lg w-[90%] max-w-sm text-left max-h-[80vh] overflow-y-scroll flex items-stretch flex-col">
+			<div className={`${isDarkMode ? "dark" : "light"} fixed inset-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center`}>
+				<div className={`modal-content ${isDarkMode ? "bg-gray-800 text-white" : "bg-white text-black"} p-8 rounded-lg w-[90%] max-w-sm text-left max-h-[80vh] overflow-y-scroll flex items-stretch flex-col`}>
 					<label className="block mb-4">
 						Reminder Name:
-						<input type="text" name="name" value={reminderData.name} onChange={handleInputChange} />
+						<input type="text" name="name" value={reminderData.name} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 					</label>
 					<label className="block mb-4">
 						Reminder Type:
-						<select value={reminderType} onChange={(e) => setReminderType(e.target.value)}>
+						<select value={reminderType} onChange={(e) => setReminderType(e.target.value)} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`}>
 							<option value="one-time">One-Time</option>
 							<option value="repeated">Repeated</option>
 						</select>
@@ -321,11 +321,11 @@ const App = () => {
 						<>
 							<label>
 								Date:
-								<input type="date" name="date" value={reminderData.date || currentDate} onChange={handleInputChange} />
+								<input type="date" name="date" value={reminderData.date || currentDate} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 							</label>
 							<label>
 								Time:
-								<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} />
+								<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 							</label>
 						</>
 					)}
@@ -333,7 +333,7 @@ const App = () => {
 						<>
 							<label>
 								Frequency:
-								<select name="repeatFrequency" value={reminderData.repeatFrequency} onChange={handleInputChange}>
+								<select name="repeatFrequency" value={reminderData.repeatFrequency} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`}>
 									<option value="hourly">Hourly</option>
 									<option value="daily">Daily</option>
 									<option value="weekly">Weekly</option>
@@ -341,72 +341,78 @@ const App = () => {
 									<option value="yearly">Yearly</option>
 								</select>
 							</label>
+							{/* Repeated type inputs */}
 							{reminderData.repeatFrequency === "hourly" || reminderData.repeatFrequency === "daily" ? (
 								<>
 									<label>
 										Time:
-										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} />
+										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 									<label>
 										Custom Interval (in hours/days):
-										<input type="number" name="customInterval" value={reminderData.customInterval || 1} onChange={handleInputChange} min="1" />
+										<input type="number" name="customInterval" value={reminderData.customInterval || 1} onChange={handleInputChange} min="1" className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 								</>
 							) : null}
-							{reminderType === "repeated" && reminderData.repeatFrequency === "weekly" && (
+							{/* Additional frequency options */}
+							{reminderData.repeatFrequency === "weekly" && (
 								<>
 									<label>Which days to repeat:</label>
 									<div>
 										{["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => (
-											<label key={index}>
+											<label key={index} className="block">
 												<input type="checkbox" name={`day-${index}`} checked={reminderData[`day-${index}`] || false} onChange={handleInputChange} />
 												{day}
 											</label>
 										))}
 									</div>
 									<label>
-										Custom Interval (in hours/days):
-										<input type="number" name="customInterval" value={reminderData.customInterval || 1} onChange={handleInputChange} min="1" />
-									</label>
-									<label>
 										Time:
-										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} />
+										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 								</>
 							)}
-							{reminderType === "repeated" && reminderData.repeatFrequency === "monthly" && (
+							{/* Monthly and yearly options */}
+							{reminderData.repeatFrequency === "monthly" && (
 								<>
 									<label>
 										Select Date:
-										<input type="date" name="repeatDate" value={reminderData.repeatDate || currentDate} onChange={handleInputChange} />
+										<input type="date" name="repeatDate" value={reminderData.repeatDate || currentDate} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 									<label>
 										Time:
-										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} />
+										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 								</>
 							)}
-							{reminderType === "repeated" && reminderData.repeatFrequency === "yearly" && (
+							{reminderData.repeatFrequency === "yearly" && (
 								<>
-									<label>Yearly Reminder Date:</label>
-									<input type="date" name="repeatDate" value={reminderData.repeatDate || currentDate} onChange={handleInputChange} />
-									<label>Time:</label>
-									<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} />
+									<label>
+										Yearly Reminder Date:
+										<input type="date" name="repeatDate" value={reminderData.repeatDate || currentDate} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+									</label>
+									<label>
+										Time:
+										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+									</label>
 								</>
 							)}
 							<label>
 								Reset Mode:
-								<select name="resetMode" value={reminderData.resetMode} onChange={handleInputChange}>
+								<select name="resetMode" value={reminderData.resetMode} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`}>
 									<option value="manual">Manual</option>
 									<option value="automatic">Automatic</option>
 								</select>
 							</label>
 						</>
 					)}
-
 					<div className="flex gap-4 mt-4 justify-end modal-actions">
-						<button onClick={handleCreateReminder}>Save</button>
-						<button onClick={() => setIsModalOpen(false)}>Cancel</button>
+						<button onClick={handleCreateReminder} className={`${isDarkMode ? "bg-gray-600 text-white" : "bg-blue-500 text-black"}`}>
+							Save
+						</button>
+						<button onClick={() => setIsModalOpen(false)} className={`${isDarkMode ? "bg-gray-600 text-white" : "bg-red-500 text-black"}`}>
+							Cancel
+						</button>
 					</div>
 				</div>
 			</div>
