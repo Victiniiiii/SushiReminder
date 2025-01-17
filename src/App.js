@@ -533,7 +533,7 @@ const App = () => {
 									{(provided) => (
 										<div {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} className="reminder-item justify-between">
 											<div className="leftSide">
-												<span>
+												<span className={reminder.checked ? "line-through" : ""}>
 													{reminder.name} - {type === "oneTime" ? formatDateTime(reminder.date, reminder.time) : formatDateTime("", reminder.time)} - {type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating..."}
 												</span>
 											</div>
