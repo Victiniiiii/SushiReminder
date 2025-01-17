@@ -6,19 +6,21 @@ import { readTextFile, writeTextFile, BaseDirectory, exists } from "@tauri-apps/
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { TrayIcon } from "@tauri-apps/api/tray";
 import { sendNotification } from "@tauri-apps/plugin-notification";
+import { register } from "@tauri-apps/plugin-global-shortcut";
+import { app } from "@tauri-apps/api";
 import { Header, Navbar, Settings, Titlebar } from "./elements.js";
 import { options } from "./systemTray.js";
 import { ensurePermission } from "./permissions.js";
 import "./index.css";
-import { register } from "@tauri-apps/plugin-global-shortcut";
-import { app } from "@tauri-apps/api";
 
 const App = () => {
 	const [activeTab, setActiveTab] = useState("one-time");
 	const [reminderType, setReminderType] = useState("one-time");
-    const [sortBy, setSortBy] = useState("time");
+	const [sortBy, setSortBy] = useState("time");
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [trayExists, setTrayExists] = useState(false);
+	const [modalOpen, setModalOpen] = useState(false);
+	const [editingReminder, setEditingReminder] = useState(null);
 	const [countdowns, setCountdowns] = useState({});
 	const [oneTimeCountdowns, setOneTimeCountdowns] = useState({});
 	const [repeatedCountdowns, setRepeatedCountdowns] = useState({});
@@ -127,7 +129,7 @@ const App = () => {
 		}, 1000);
 
 		return () => clearInterval(interval);
-	}, [reminders, oneTimeCountdowns, repeatedCountdowns]); // test
+	}, [reminders, oneTimeCountdowns, repeatedCountdowns]);
 
 	const getNextOccurrence = (reminder) => {
 		const now = new Date();
@@ -166,9 +168,7 @@ const App = () => {
 	};
 
 	const handleCreateReminder = async () => {
-		const newReminder = { ...reminderData, id: uuidv4(), notified: false };
-
-		if (newReminder.name === "") {
+		if (reminderData.name === "") {
 			alert("Please give a name to this reminder.");
 			return;
 		}
@@ -176,8 +176,7 @@ const App = () => {
 		const now = new Date();
 
 		if (reminderType === "one-time") {
-			const selectedDateTime = new Date(`${newReminder.date}T${newReminder.time}`);
-
+			const selectedDateTime = new Date(`${reminderData.date}T${reminderData.time}`);
 			if (isNaN(selectedDateTime.getTime())) {
 				alert("Error: The provided date and time are invalid.");
 				return;
@@ -186,18 +185,16 @@ const App = () => {
 				return;
 			}
 		} else if (reminderType === "repeated") {
-			const customInterval = parseInt(newReminder.customInterval, 10) || 0;
-			const repeatTimeParts = newReminder.time.split(":");
+			const customInterval = parseInt(reminderData.customInterval, 10) || 0;
+			const repeatTimeParts = reminderData.time.split(":");
 			const repeatHours = parseInt(repeatTimeParts[0], 10) || 0;
 			const repeatMinutes = parseInt(repeatTimeParts[1], 10) || 0;
 
 			let selectedDateTime = new Date();
 			selectedDateTime.setHours(repeatHours, repeatMinutes, 0, 0);
-
 			while (selectedDateTime < now) {
 				selectedDateTime.setMinutes(selectedDateTime.getMinutes() + customInterval);
 			}
-
 			if (isNaN(selectedDateTime.getTime())) {
 				alert("Error: The provided time or custom interval is invalid.");
 				return;
@@ -205,10 +202,20 @@ const App = () => {
 		}
 
 		const updatedReminders = { ...reminders };
-		if (reminderType === "one-time") {
-			updatedReminders.oneTime.push(newReminder);
+
+		if (reminderData.id) {
+			if (reminderType === "one-time") {
+				updatedReminders.oneTime = updatedReminders.oneTime.map((reminder) => (reminder.id === reminderData.id ? { ...reminder, ...reminderData } : reminder));
+			} else {
+				updatedReminders.repeated = updatedReminders.repeated.map((reminder) => (reminder.id === reminderData.id ? { ...reminder, ...reminderData } : reminder));
+			}
 		} else {
-			updatedReminders.repeated.push(newReminder);
+			const newReminder = { ...reminderData, id: uuidv4(), notified: false };
+			if (reminderType === "one-time") {
+				updatedReminders.oneTime.push(newReminder);
+			} else {
+				updatedReminders.repeated.push(newReminder);
+			}
 		}
 
 		setReminders(updatedReminders);
@@ -466,23 +473,6 @@ const App = () => {
 			}
 		};
 
-		const handleRenameReminder = (id, newName) => {
-			const updatedReminders = { ...reminders };
-			const reminder = updatedReminders.repeated.find((reminder) => reminder.id === id);
-			if (reminder) {
-				reminder.name = newName;
-				setReminders(updatedReminders);
-				writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Document });
-			} else {
-				const oneTimeReminder = updatedReminders.oneTime.find((reminder) => reminder.id === id);
-				if (oneTimeReminder) {
-					oneTimeReminder.name = newName;
-					setReminders(updatedReminders);
-					writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Document });
-				}
-			}
-		};
-
 		const handleToggleCheckbox = async (id) => {
 			const updatedReminders = { ...reminders };
 			const reminder = updatedReminders.repeated.find((r) => r.id === id);
@@ -555,13 +545,12 @@ const App = () => {
 												{type === "repeated" && <button onClick={() => handleResetReminder(reminder.id)}>Reset</button>}
 												<button
 													onClick={() => {
-														const newName = prompt("Enter new name:", reminder.name);
-														if (newName && newName.trim() !== "") {
-															handleRenameReminder(reminder.id, newName);
-														}
+														setIsModalOpen(true);
+														setReminderData(reminder);
+														setReminderType(type === "oneTime" ? "one-time" : "repeated");
 													}}
 												>
-													Rename
+													Edit
 												</button>
 											</div>
 										</div>
@@ -569,6 +558,8 @@ const App = () => {
 								</Draggable>
 							))}
 							{provided.placeholder}
+
+							{isModalOpen && renderModalContent()}
 						</div>
 					)}
 				</Droppable>
