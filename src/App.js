@@ -10,29 +10,13 @@ import { sendNotification } from "@tauri-apps/plugin-notification";
 import { app } from "@tauri-apps/api";
 import { Header, Navbar, Settings, Titlebar } from "./elements.js";
 import { options } from "./systemTray.js";
-import { registerHotkeys, focusHideHotkeyFunction, quitHotkeyFunction } from "./hotkeys.js";
+import { useHotkeys } from "./hotkeys.js";
 import "./index.css";
 
 const App = () => {
-	const [focusHideHotkey, setFocusHideHotkey] = useState(() => {
-		const storedHotkey = localStorage.getItem("focusHideHotkey");
-		if (!storedHotkey) {
-			localStorage.setItem("focusHideHotkey", "R");
-			return "R";
-		}
-		return storedHotkey;
-	});
-	const [quitHotkey, setQuitHotkey] = useState(() => {
-		const storedQuitHotkey = localStorage.getItem("quitHotkey");
-		if (!storedQuitHotkey) {
-			localStorage.setItem("quitHotkey", "T");
-			return "T";
-		}
-		return storedQuitHotkey;
-	});
+	const { focusHideHotkeyFunction, quitHotkeyFunction } = useHotkeys();
 	const [sortBy, setSortBy] = useState(() => localStorage.getItem("sortBy") || "custom");
 	const [isDarkMode, setIsDarkMode] = useState(() => JSON.parse(localStorage.getItem("isDarkMode")) || true);
-
 	const [activeTab, setActiveTab] = useState("one-time");
 	const [reminderType, setReminderType] = useState("one-time");
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -84,7 +68,6 @@ const App = () => {
 		};
 
 		loadReminders();
-		registerHotkeys();
 	}, []);
 
 	useEffect(() => {
@@ -182,9 +165,17 @@ const App = () => {
 				nextOccurrence.setDate(nextOccurrence.getDate() + 1);
 			}
 		} else if (reminder.repeatFrequency === "monthly") {
-			nextOccurrence.setMonth(nextOccurrence.getMonth() + 1);
+			const nextMonth = new Date(nextOccurrence);
+			nextMonth.setMonth(nextMonth.getMonth() + 1);
+			if (nextMonth.getDate() < nextOccurrence.getDate()) {
+				nextOccurrence.setMonth(nextOccurrence.getMonth() + 1);
+			}
 		} else if (reminder.repeatFrequency === "yearly") {
-			nextOccurrence.setFullYear(nextOccurrence.getFullYear() + 1);
+			const nextYear = new Date(nextOccurrence);
+			nextYear.setFullYear(nextYear.getFullYear() + 1);
+			if (nextYear.getDate() < nextOccurrence.getDate()) {
+				nextOccurrence.setFullYear(nextOccurrence.getFullYear() + 1);
+			}
 		}
 
 		return nextOccurrence;
@@ -215,9 +206,22 @@ const App = () => {
 
 			let selectedDateTime = new Date();
 			selectedDateTime.setHours(repeatHours, repeatMinutes, 0, 0);
+
 			while (selectedDateTime < now) {
-				selectedDateTime.setMinutes(selectedDateTime.getMinutes() + customInterval);
+				if (reminderData.repeatFrequency === "hourly") {
+					selectedDateTime.setHours(selectedDateTime.getHours() + (customInterval || 1));
+				} else if (reminderData.repeatFrequency === "daily") {
+					selectedDateTime.setDate(selectedDateTime.getDate() + (customInterval || 1));
+				} else if (reminderData.repeatFrequency === "weekly") {
+					const daysUntilNext = 7 - selectedDateTime.getDay() + (reminderData.dayOfWeek || 0);
+					selectedDateTime.setDate(selectedDateTime.getDate() + (customInterval ? customInterval * 7 : daysUntilNext));
+				} else if (reminderData.repeatFrequency === "monthly") {
+					selectedDateTime.setMonth(selectedDateTime.getMonth() + (customInterval || 1));
+				} else if (reminderData.repeatFrequency === "yearly") {
+					selectedDateTime.setFullYear(selectedDateTime.getFullYear() + (customInterval || 1));
+				}
 			}
+
 			if (isNaN(selectedDateTime.getTime())) {
 				alert("Error: The provided time or custom interval is invalid.");
 				return;
@@ -239,6 +243,7 @@ const App = () => {
 			} else {
 				updatedReminders.repeated.push(newReminder);
 			}
+			console.log("newReminder :>> ", newReminder);
 		}
 
 		setReminders(updatedReminders);
@@ -247,8 +252,8 @@ const App = () => {
 		setIsModalOpen(false);
 		setReminderData({
 			name: "",
-			date: "",
-			time: "",
+			date: new Date().toISOString().split("T")[0],
+			time: new Date().toTimeString().slice(0, 5),
 			repeatFrequency: "hourly",
 			resetMode: "manual",
 			customInterval: "",
@@ -394,7 +399,7 @@ const App = () => {
 								<>
 									<label>
 										Select Date:
-										<input type="date" name="repeatDate" value={reminderData.repeatDate || currentDate} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+										<input type="date" name="date" value={reminderData.date || currentDate} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 									<label>
 										Time:
@@ -406,7 +411,7 @@ const App = () => {
 								<>
 									<label>
 										Yearly Reminder Date:
-										<input type="date" name="repeatDate" value={reminderData.repeatDate || currentDate} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+										<input type="date" name="date" value={reminderData.date || currentDate} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 									<label>
 										Time:
@@ -456,7 +461,6 @@ const App = () => {
 
 				const currentHour = localDate.getHours();
 				const currentMinute = localDate.getMinutes();
-				const currentSecond = 0;
 				reminder.checked = false;
 
 				const formatDate = (date) => {
@@ -477,12 +481,27 @@ const App = () => {
 						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 						break;
 					case "monthly":
+						const currentDay = localDate.getDate();
+						const currentMonth = localDate.getMonth();
 						localDate.setMonth(localDate.getMonth() + 1);
-						reminder.date = formatDate(localDate);
+
+						if (currentDay < 29 || localDate.getDate() >= currentDay) {
+							reminder.date = formatDate(localDate);
+						} else {
+							const lastDay = new Date(localDate.getFullYear(), localDate.getMonth() + 1, 0);
+							reminder.date = formatDate(lastDay);
+						}
+
 						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 						break;
 					case "yearly":
-						localDate.setFullYear(localDate.getFullYear() + 1);
+						const currentYear = localDate.getFullYear();
+						localDate.setFullYear(currentYear + 1);
+
+						if (localDate.getMonth() === 1 && localDate.getDate() === 29) {
+							localDate.setDate(28);
+						}
+
 						reminder.date = formatDate(localDate);
 						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 						break;
@@ -491,11 +510,13 @@ const App = () => {
 				}
 
 				const nextOccurrence = getNextOccurrence(reminder);
+				const timeDiff = nextOccurrence - now;
+				const daysUntilNextOccurrence = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
 
 				setRepeatedCountdowns((prevCountdowns) => {
 					const updatedCountdowns = {
 						...prevCountdowns,
-						[reminder.id]: formatCountdown(nextOccurrence - now),
+						[reminder.id]: formatCountdown(timeDiff),
 					};
 					return updatedCountdowns;
 				});
@@ -570,7 +591,11 @@ const App = () => {
 			return (
 				<Droppable droppableId={type}>
 					{(provided) => (
-						<div {...provided.droppableProps} ref={provided.innerRef} className="tab-content">
+						<div
+							{...provided.droppableProps}
+							ref={provided.innerRef}
+							className={`custom-height p-8 overflow-y-auto ${isDarkMode ? "dark-scrollbar" : ""}`}
+						>
 							{sortReminders(reminders[type]).map((reminder, index) => (
 								<Draggable key={reminder.id} draggableId={reminder.id} index={index}>
 									{(provided) => (
@@ -626,7 +651,7 @@ const App = () => {
 
 	return (
 		<div
-			className={`${isDarkMode ? "dark" : "light"} w-[100dvw] h-[100dvh] ${isDarkMode ? "text-white" : "text-black"}`}
+			className={`${isDarkMode ? "dark" : "light"} w-full h-full min-w-[100dvw] min-h-[100dvh] ${isDarkMode ? "text-white" : "text-black"} overflow-hidden`}
 			style={{
 				background: isDarkMode
 					? "radial-gradient(at 24% 32%, #111111 0px, transparent 50%), radial-gradient(at 80% 28%, #010710 0px, transparent 50%), radial-gradient(at 12% 93%, #0d0400 0px, transparent 50%), radial-gradient(at 59% 74%, #1b1221 0px, transparent 50%), #000000"
@@ -634,10 +659,10 @@ const App = () => {
 			}}
 		>
 			<Titlebar isDarkMode={isDarkMode} />
-			<main>
+			<main className="h-full">
 				<Header setIsModalOpen={setIsModalOpen} isDarkMode={isDarkMode} />
 				<Navbar activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} />
-				{renderTabContent()}
+				<div>{renderTabContent()}</div>
 			</main>
 			{isModalOpen && renderModalContent()}
 		</div>

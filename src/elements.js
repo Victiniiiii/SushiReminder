@@ -1,7 +1,8 @@
-import "./index.css";
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { useHotkeys } from "./hotkeys.js";
+import "./index.css";
 
 export const Titlebar = ({ isDarkMode }) => (
 	<div data-tauri-drag-region className={`h-8 select-none flex justify-end bg-gray-900 text-white`} id="titlebar">
@@ -45,7 +46,7 @@ export const Navbar = ({ activeTab, setActiveTab, isDarkMode }) => (
 );
 
 export const Settings = ({ sortBy, setSortBy, isDarkMode, setIsDarkMode, focusHideHotkeyFunction, quitHotkeyFunction }) => (
-	<div className={`tab-content space-y-6 flex flex-col items-center`}>
+	<div className={`space-y-6 flex flex-col items-center`}>
 		<div className="flex items-center space-x-4">
 			<span>Sort by:</span>
 			<span className={`${sortBy === "name" ? "text-green-500" : "text-gray-500"}`}>Name</span>

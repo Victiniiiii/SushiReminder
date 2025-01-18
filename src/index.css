@@ -13,8 +13,12 @@ body {
 	padding: 0;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-	scrollbar-width: 0;
-	transition: background 0.5s ease;
+	scrollbar-width: none;
+	overflow: hidden;
+}
+
+.custom-height {
+	height: calc(100vh - 11rem);
 }
 
 .dark-scrollbar::-webkit-scrollbar {
@@ -33,10 +37,6 @@ body {
 
 .dark-scrollbar::-webkit-scrollbar-thumb:hover {
 	background-color: #7a7a7a;
-}
-
-.tab-content {
-	padding: 2rem;
 }
 
 .create-button {
