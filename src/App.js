@@ -6,7 +6,7 @@ import { readTextFile, writeTextFile, BaseDirectory, exists } from "@tauri-apps/
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { TrayIcon } from "@tauri-apps/api/tray";
 import { sendNotification } from "@tauri-apps/plugin-notification";
-import { register } from "@tauri-apps/plugin-global-shortcut";
+import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
 import { app } from "@tauri-apps/api";
 import { Header, Navbar, Settings, Titlebar } from "./elements.js";
 import { options } from "./systemTray.js";
@@ -14,10 +14,27 @@ import { ensurePermission } from "./permissions.js";
 import "./index.css";
 
 const App = () => {
+	const [focusHideHotkey, setFocusHideHotkey] = useState(() => {
+		const storedHotkey = localStorage.getItem("focusHideHotkey");
+		if (!storedHotkey) {
+			localStorage.setItem("focusHideHotkey", "R");
+			return "R";
+		}
+		return storedHotkey;
+	});
+	const [quitHotkey, setQuitHotkey] = useState(() => {
+		const storedQuitHotkey = localStorage.getItem("quitHotkey");
+		if (!storedQuitHotkey) {
+			localStorage.setItem("quitHotkey", "T");
+			return "T";
+		}
+		return storedQuitHotkey;
+	});
+	const [sortBy, setSortBy] = useState(() => localStorage.getItem("sortBy") || "custom");
+	const [isDarkMode, setIsDarkMode] = useState(() => JSON.parse(localStorage.getItem("isDarkMode")) || true);
+
 	const [activeTab, setActiveTab] = useState("one-time");
 	const [reminderType, setReminderType] = useState("one-time");
-	const [sortBy, setSortBy] = useState("custom");
-	const [isDarkMode, setIsDarkMode] = useState(true);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [trayExists, setTrayExists] = useState(false);
 	const [modalOpen, setModalOpen] = useState(false);
@@ -34,28 +51,42 @@ const App = () => {
 		resetMode: "manual",
 		customInterval: "",
 	});
-
 	const appWindow = getCurrentWindow();
-	document.getElementById("minimizeButton")?.addEventListener("click", () => appWindow.minimize());
-	document.getElementById("hideButton")?.addEventListener("click", () => appWindow.hide());
-	document.getElementById("closeButton")?.addEventListener("click", () => appWindow.destroy());
 
 	useEffect(() => {
+		document.getElementById("minimizeButton")?.addEventListener("click", () => appWindow.minimize());
+		document.getElementById("hideButton")?.addEventListener("click", () => appWindow.hide());
+		document.getElementById("closeButton")?.addEventListener("click", () => appWindow.destroy());
+
+		const registerHotkeys = async () => {
+			register(`Shift+Alt+${quitHotkey}`, (event) => {
+				if (event.state === "Pressed") {
+					appWindow.destroy();
+				}
+			});
+			register(`Shift+Alt+${focusHideHotkey}`, async (event) => {
+				if (event.state === "Pressed") {
+					const isWindowMinimized = await appWindow.isMinimized();
+					console.log("object");
+					if (isWindowMinimized) {
+						console.log("test1");
+						appWindow.unminimize();
+						appWindow.show();
+						appWindow.setFocus();
+					} else {
+						console.log("test2");
+						appWindow.minimize();
+					}
+				}
+			});
+		};
+
 		const loadReminders = async () => {
 			if (!trayExists) {
 				await TrayIcon.new(options);
 				setTrayExists(true);
 			}
 			await ensurePermission();
-			register("Shift+Alt+R", () => {
-				appWindow.unminimize().then(() => {
-					appWindow.show();
-					appWindow.setFocus();
-				});
-			});
-			register("Shift+Alt+T", () => {
-				appWindow.destroy();
-			});
 			try {
 				if (await exists("reminders.json", { baseDir: BaseDirectory.Document })) {
 					setReminders(JSON.parse(await readTextFile("reminders.json", { baseDir: BaseDirectory.Document })));
@@ -68,13 +99,21 @@ const App = () => {
 				console.error(e);
 			}
 		};
+
 		loadReminders();
+		registerHotkeys();
 	}, []);
+
+	useEffect(() => {
+		const settings = { sortBy, isDarkMode };
+		for (const key in settings) {
+			localStorage.setItem(key, key === "isDarkMode" ? JSON.stringify(settings[key]) : settings[key]);
+		}
+	}, [sortBy, isDarkMode]);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
 			const now = new Date();
-
 			const newOneTimeCountdowns = { ...oneTimeCountdowns };
 			reminders.oneTime.forEach((reminder) => {
 				const reminderTime = new Date(`${reminder.date}T${reminder.time}`);
@@ -131,6 +170,39 @@ const App = () => {
 
 		return () => clearInterval(interval);
 	}, [reminders, oneTimeCountdowns, repeatedCountdowns]);
+
+	const focusHideHotkeyFunction = () => {
+		console.log(`Keys: `, focusHideHotkey, quitHotkey);
+		const input = prompt("Enter the hotkey for focusing and hiding app. Will be use with Shift + Alt.", focusHideHotkey);
+		if (input) setFocusHideHotkey(input);
+		unregister(`Shift+Alt+${focusHideHotkey}`);
+		register(`Shift+Alt+${input}`, async (event) => {
+			if (event.state === "Pressed") {
+				const isWindowMinimized = await appWindow.isMinimized();
+				if (isWindowMinimized) {
+					appWindow.unminimize();
+					appWindow.show();
+					appWindow.setFocus();
+				} else {
+					appWindow.minimize();
+				}
+			}
+		});
+		localStorage.setItem("focusHideHotkey", input);
+	};
+
+	const quitHotkeyFunction = () => {
+		console.log(`Keys: `, focusHideHotkey, quitHotkey);
+		const input = prompt("Enter the hotkey for quitting app. Will be use with Shift + Alt.", quitHotkey);
+		if (input) setQuitHotkey(input);
+		unregister(`Shift+Alt+${quitHotkey}`);
+		register(`Shift+Alt+${input}`, (event) => {
+			if (event.state === "Pressed") {
+				appWindow.destroy();
+			}
+		});
+		localStorage.setItem("quitHotkey", input);
+	};
 
 	const getNextOccurrence = (reminder) => {
 		const now = new Date();
@@ -341,7 +413,6 @@ const App = () => {
 									<option value="yearly">Yearly</option>
 								</select>
 							</label>
-							{/* Repeated type inputs */}
 							{reminderData.repeatFrequency === "hourly" || reminderData.repeatFrequency === "daily" ? (
 								<>
 									<label>
@@ -354,7 +425,6 @@ const App = () => {
 									</label>
 								</>
 							) : null}
-							{/* Additional frequency options */}
 							{reminderData.repeatFrequency === "weekly" && (
 								<>
 									<label>Which days to repeat:</label>
@@ -372,7 +442,6 @@ const App = () => {
 									</label>
 								</>
 							)}
-							{/* Monthly and yearly options */}
 							{reminderData.repeatFrequency === "monthly" && (
 								<>
 									<label>
@@ -601,7 +670,7 @@ const App = () => {
 			case "repeated":
 				return <DragDropContext onDragEnd={onDragEnd}>{renderReminders("repeated")}</DragDropContext>;
 			case "settings":
-				return <Settings sortBy={sortBy} setSortBy={setSortBy} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />;
+				return <Settings sortBy={sortBy} setSortBy={setSortBy} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} focusHideHotkeyFunction={focusHideHotkeyFunction} quitHotkeyFunction={quitHotkeyFunction} />;
 			default:
 				return null;
 		}
