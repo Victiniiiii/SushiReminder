@@ -2,15 +2,15 @@ import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { v4 as uuidv4 } from "uuid";
+import { isPermissionGranted, requestPermission } from "@tauri-apps/plugin-notification";
 import { readTextFile, writeTextFile, BaseDirectory, exists } from "@tauri-apps/plugin-fs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { TrayIcon } from "@tauri-apps/api/tray";
 import { sendNotification } from "@tauri-apps/plugin-notification";
-import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
 import { app } from "@tauri-apps/api";
 import { Header, Navbar, Settings, Titlebar } from "./elements.js";
 import { options } from "./systemTray.js";
-import { ensurePermission } from "./permissions.js";
+import { registerHotkeys, focusHideHotkeyFunction, quitHotkeyFunction } from "./hotkeys.js";
 import "./index.css";
 
 const App = () => {
@@ -58,33 +58,18 @@ const App = () => {
 		document.getElementById("hideButton")?.addEventListener("click", () => appWindow.hide());
 		document.getElementById("closeButton")?.addEventListener("click", () => appWindow.destroy());
 
-		const registerHotkeys = async () => {
-			register(`Shift+Alt+${quitHotkey}`, (event) => {
-				if (event.state === "Pressed") {
-					appWindow.destroy();
-				}
-			});
-			register(`Shift+Alt+${focusHideHotkey}`, async (event) => {
-				if (event.state === "Pressed") {
-					const isWindowMinimized = await appWindow.isMinimized();
-					const isWindowVisible = await appWindow.isVisible();
-					if (isWindowMinimized || !isWindowVisible) {
-						appWindow.unminimize();
-						appWindow.show();
-						appWindow.setFocus();
-					} else {
-						appWindow.minimize();
-					}
-				}
-			});
-		};
-
 		const loadReminders = async () => {
 			if (!trayExists) {
 				await TrayIcon.new(options);
 				setTrayExists(true);
 			}
-			await ensurePermission();
+
+			if (!(await isPermissionGranted(BaseDirectory.Document))) {
+				if (!(await requestPermission(BaseDirectory.Document))) {
+					alert("File system permission denied.");
+				}
+			}
+
 			try {
 				if (await exists("reminders.json", { baseDir: BaseDirectory.Document })) {
 					setReminders(JSON.parse(await readTextFile("reminders.json", { baseDir: BaseDirectory.Document })));
@@ -168,38 +153,6 @@ const App = () => {
 
 		return () => clearInterval(interval);
 	}, [reminders, oneTimeCountdowns, repeatedCountdowns]);
-
-	const focusHideHotkeyFunction = () => {
-		const input = prompt("Enter the hotkey for focusing and hiding app. Will be use with Shift + Alt.", focusHideHotkey);
-		if (input) setFocusHideHotkey(input);
-		unregister(`Shift+Alt+${focusHideHotkey}`);
-		register(`Shift+Alt+${input}`, async (event) => {
-			if (event.state === "Pressed") {
-				const isWindowMinimized = await appWindow.isMinimized();
-				const isWindowVisible = await appWindow.isVisible();
-				if (isWindowMinimized || !isWindowVisible) {
-					appWindow.unminimize();
-					appWindow.show();
-					appWindow.setFocus();
-				} else {
-					appWindow.minimize();
-				}
-			}
-		});
-		localStorage.setItem("focusHideHotkey", input);
-	};
-
-	const quitHotkeyFunction = () => {
-		const input = prompt("Enter the hotkey for quitting app. Will be use with Shift + Alt.", quitHotkey);
-		if (input) setQuitHotkey(input);
-		unregister(`Shift+Alt+${quitHotkey}`);
-		register(`Shift+Alt+${input}`, (event) => {
-			if (event.state === "Pressed") {
-				appWindow.destroy();
-			}
-		});
-		localStorage.setItem("quitHotkey", input);
-	};
 
 	const getNextOccurrence = (reminder) => {
 		const now = new Date();
@@ -372,7 +325,7 @@ const App = () => {
 
 		return (
 			<div className={`${isDarkMode ? "dark" : "light"} fixed inset-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center`}>
-				<div className={`modal-content ${isDarkMode ? "bg-gray-800 text-white" : "bg-white text-black"} p-8 rounded-lg w-[90%] max-w-sm text-left max-h-[80vh] overflow-y-scroll flex items-stretch flex-col`}>
+				<div className={`modal-content ${isDarkMode ? "bg-gray-800 text-white dark-scrollbar" : "bg-white text-black"} p-8 rounded-lg w-[90%] max-w-sm text-left max-h-[80vh] overflow-y-scroll flex items-stretch flex-col`}>
 					<label className="block mb-4">
 						Reminder Name:
 						<input type="text" name="name" value={reminderData.name} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
