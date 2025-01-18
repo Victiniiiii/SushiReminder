@@ -435,10 +435,16 @@ const App = () => {
 
 			if (reminder) {
 				const now = new Date();
-				const currentHour = now.getHours();
-				const currentMinute = now.getMinutes();
+				const localDate = new Date(now.toLocaleString("en-US", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }));
+
+				const currentHour = localDate.getHours();
+				const currentMinute = localDate.getMinutes();
 				const currentSecond = 0;
 				reminder.checked = false;
+
+				const formatDate = (date) => {
+					return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+				};
 
 				switch (reminder.repeatFrequency) {
 					case "hourly":
@@ -446,19 +452,21 @@ const App = () => {
 						break;
 					case "daily":
 						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
-						reminder.date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+						reminder.date = formatDate(localDate);
 						break;
 					case "weekly":
-						reminder.date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+						localDate.setDate(localDate.getDate() + 7);
+						reminder.date = formatDate(localDate);
 						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
-						now.setDate(now.getDate() + 7);
 						break;
 					case "monthly":
-						reminder.date = `${now.getFullYear()}-${String(now.getMonth() + 2).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+						localDate.setMonth(localDate.getMonth() + 1);
+						reminder.date = formatDate(localDate);
 						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 						break;
 					case "yearly":
-						reminder.date = `${now.getFullYear() + 1}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+						localDate.setFullYear(localDate.getFullYear() + 1);
+						reminder.date = formatDate(localDate);
 						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 						break;
 					default:
