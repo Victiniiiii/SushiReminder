@@ -67,14 +67,12 @@ const App = () => {
 			register(`Shift+Alt+${focusHideHotkey}`, async (event) => {
 				if (event.state === "Pressed") {
 					const isWindowMinimized = await appWindow.isMinimized();
-					console.log("object");
-					if (isWindowMinimized) {
-						console.log("test1");
+					const isWindowVisible = await appWindow.isVisible();
+					if (isWindowMinimized || !isWindowVisible) {
 						appWindow.unminimize();
 						appWindow.show();
 						appWindow.setFocus();
 					} else {
-						console.log("test2");
 						appWindow.minimize();
 					}
 				}
@@ -172,14 +170,14 @@ const App = () => {
 	}, [reminders, oneTimeCountdowns, repeatedCountdowns]);
 
 	const focusHideHotkeyFunction = () => {
-		console.log(`Keys: `, focusHideHotkey, quitHotkey);
 		const input = prompt("Enter the hotkey for focusing and hiding app. Will be use with Shift + Alt.", focusHideHotkey);
 		if (input) setFocusHideHotkey(input);
 		unregister(`Shift+Alt+${focusHideHotkey}`);
 		register(`Shift+Alt+${input}`, async (event) => {
 			if (event.state === "Pressed") {
 				const isWindowMinimized = await appWindow.isMinimized();
-				if (isWindowMinimized) {
+				const isWindowVisible = await appWindow.isVisible();
+				if (isWindowMinimized || !isWindowVisible) {
 					appWindow.unminimize();
 					appWindow.show();
 					appWindow.setFocus();
@@ -192,7 +190,6 @@ const App = () => {
 	};
 
 	const quitHotkeyFunction = () => {
-		console.log(`Keys: `, focusHideHotkey, quitHotkey);
 		const input = prompt("Enter the hotkey for quitting app. Will be use with Shift + Alt.", quitHotkey);
 		if (input) setQuitHotkey(input);
 		unregister(`Shift+Alt+${quitHotkey}`);
@@ -250,8 +247,6 @@ const App = () => {
 
 		if (reminderType === "one-time") {
 			const selectedDateTime = new Date(`${reminderData.date}T${reminderData.time}`);
-			console.log(reminderData);
-			console.log(selectedDateTime);
 			if (isNaN(selectedDateTime.getTime())) {
 				alert("Error: The provided date and time are invalid.");
 				return;
