@@ -66,7 +66,7 @@ const App = () => {
 
 			if (!(await isPermissionGranted(BaseDirectory.Document))) {
 				if (!(await requestPermission(BaseDirectory.Document))) {
-					alert("File system permission denied.");
+					alert("Notification permission denied.");
 				}
 			}
 
