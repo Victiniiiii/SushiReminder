@@ -563,8 +563,11 @@ const App = () => {
 			const sortReminders = (reminders) => {
 				const sortedReminders = reminders.slice();
 
-				if (sortBy === "time") {
-					sortedReminders.sort((a, b) => {
+				sortedReminders.sort((a, b) => {
+					if (a.checked && !b.checked) return 1;
+					if (!a.checked && b.checked) return -1;
+
+					if (sortBy === "time") {
 						const getTimeRemaining = (reminder) => {
 							const countdown = type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating...";
 
@@ -581,21 +584,19 @@ const App = () => {
 						const timeA = getTimeRemaining(a);
 						const timeB = getTimeRemaining(b);
 						return timeA - timeB;
-					});
-				} else if (sortBy === "name") {
-					sortedReminders.sort((a, b) => a.name.localeCompare(b.name));
-				}
+					} else if (sortBy === "name") {
+						return a.name.localeCompare(b.name);
+					}
+					return 0;
+				});
+
 				return sortedReminders;
 			};
 
 			return (
 				<Droppable droppableId={type}>
 					{(provided) => (
-						<div
-							{...provided.droppableProps}
-							ref={provided.innerRef}
-							className={`custom-height p-8 overflow-y-auto ${isDarkMode ? "dark-scrollbar" : ""}`}
-						>
+						<div {...provided.droppableProps} ref={provided.innerRef} className={`custom-height p-8 overflow-y-auto ${isDarkMode ? "dark-scrollbar" : ""}`}>
 							{sortReminders(reminders[type]).map((reminder, index) => (
 								<Draggable key={reminder.id} draggableId={reminder.id} index={index}>
 									{(provided) => (
