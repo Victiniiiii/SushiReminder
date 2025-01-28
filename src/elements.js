@@ -64,7 +64,11 @@ export const Settings = ({ sortBy, setSortBy, isDarkMode, setIsDarkMode, focusHi
 				<div className={`absolute top-1 left-1 w-4 h-4 ${isDarkMode ? "bg-gray-900" : "bg-white"} rounded-full transition-transform duration-200 ${isDarkMode ? "transform translate-x-6" : ""}`}></div>
 			</div>
 		</div>
-		<button className="bg-green-700 px-4 py-2 rounded-2xl text-gray-200" onClick={focusHideHotkeyFunction}>Set Hotkey for Focusing App</button>
-		<button className="bg-green-700 px-4 py-2 rounded-2xl text-gray-200" onClick={quitHotkeyFunction}>Set Hotkey for Quitting App</button>
+		<button className="bg-green-700 px-4 py-2 rounded-2xl text-gray-200" onClick={focusHideHotkeyFunction}>
+			Set Hotkey for Focusing App
+		</button>
+		<button className="bg-green-700 px-4 py-2 rounded-2xl text-gray-200" onClick={quitHotkeyFunction}>
+			Set Hotkey for Quitting App
+		</button>
 	</div>
 );
