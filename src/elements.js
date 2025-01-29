@@ -65,7 +65,7 @@ export const Settings = ({ sortBy, setSortBy, isDarkMode, setIsDarkMode, focusHi
 			</div>
 		</div>
 		<button className="bg-green-700 px-4 py-2 rounded-2xl text-gray-200" onClick={focusHideHotkeyFunction}>
-			Set Hotkey for Focusing App
+			Set Hotkey for Focusing and Hiding App
 		</button>
 		<button className="bg-green-700 px-4 py-2 rounded-2xl text-gray-200" onClick={quitHotkeyFunction}>
 			Set Hotkey for Quitting App

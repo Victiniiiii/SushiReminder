@@ -41,7 +41,7 @@ export const useHotkeys = () => {
 					appWindow.show();
 					appWindow.setFocus();
 				} else {
-					appWindow.minimize();
+					appWindow.hide();
 				}
 			}
 		});
