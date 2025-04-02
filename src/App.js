@@ -46,7 +46,6 @@ const App = () => {
 			if (!trayExists) {
                 setTrayExists(true);
 				const tray = new TrayIcon(options);
-				await tray.setTooltip("SushiReminder");				
 			}
 
 			if (!(await isPermissionGranted(BaseDirectory.Document))) {
