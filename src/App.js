@@ -44,7 +44,7 @@ const App = () => {
 
 		const loadReminders = async () => {
 			if (!trayExists) {
-                setTrayExists(true);
+				setTrayExists(true);
 				const tray = new TrayIcon(options);
 			}
 
@@ -311,10 +311,18 @@ const App = () => {
 
 		const { source, destination } = result;
 		const updatedReminders = { ...reminders };
-		const movedReminder = updatedReminders[activeTab][source.index];
 
-		updatedReminders[activeTab].splice(source.index, 1);
-		updatedReminders[activeTab].splice(destination.index, 0, movedReminder);
+		const reminderType = activeTab === "one-time" ? "oneTime" : activeTab;
+
+		if (!updatedReminders[reminderType]) {
+			console.error(`Reminder type "${reminderType}" not found in reminders object`);
+			return;
+		}
+
+		const movedReminder = updatedReminders[reminderType][source.index];
+
+		updatedReminders[reminderType].splice(source.index, 1);
+		updatedReminders[reminderType].splice(destination.index, 0, movedReminder);
 
 		setReminders(updatedReminders);
 	};
