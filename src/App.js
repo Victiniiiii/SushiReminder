@@ -336,12 +336,18 @@ const App = () => {
 			timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 		}).format(new Date());
 
+		const initialData = {
+			...reminderData,
+			date: reminderData.id ? reminderData.date : currentDate,
+			time: reminderData.id ? reminderData.time : currentTime,
+		};
+
 		return (
 			<div className={`${isDarkMode ? "dark" : "light"} fixed inset-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center`}>
 				<div className={`modal-content ${isDarkMode ? "bg-gray-800 text-white dark-scrollbar" : "bg-white text-black"} p-8 rounded-lg w-[90%] max-w-sm text-left max-h-[80vh] overflow-y-scroll flex items-stretch flex-col`}>
 					<label className="block mb-4">
 						Reminder Name:
-						<input type="text" name="name" value={reminderData.name} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+						<input type="text" name="name" value={initialData.name} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 					</label>
 					<label className="block mb-4">
 						Reminder Type:
@@ -354,11 +360,11 @@ const App = () => {
 						<>
 							<label>
 								Date:
-								<input type="date" name="date" value={reminderData.date || currentDate} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+								<input type="date" name="date" value={initialData.date} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 							</label>
 							<label>
 								Time:
-								<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+								<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 							</label>
 						</>
 					)}
@@ -366,7 +372,7 @@ const App = () => {
 						<>
 							<label>
 								Frequency:
-								<select name="repeatFrequency" value={reminderData.repeatFrequency} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`}>
+								<select name="repeatFrequency" value={initialData.repeatFrequency} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`}>
 									<option value="hourly">Hourly</option>
 									<option value="daily">Daily</option>
 									<option value="weekly">Weekly</option>
@@ -374,62 +380,62 @@ const App = () => {
 									<option value="yearly">Yearly</option>
 								</select>
 							</label>
-							{reminderData.repeatFrequency === "hourly" || reminderData.repeatFrequency === "daily" ? (
+							{initialData.repeatFrequency === "hourly" || initialData.repeatFrequency === "daily" ? (
 								<>
 									<label>
 										Time:
-										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+										<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 									<label>
 										Custom Interval (in hours/days):
-										<input type="number" name="customInterval" value={reminderData.customInterval || 1} onChange={handleInputChange} min="1" className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+										<input type="number" name="customInterval" value={initialData.customInterval || 1} onChange={handleInputChange} min="1" className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 								</>
 							) : null}
-							{reminderData.repeatFrequency === "weekly" && (
+							{initialData.repeatFrequency === "weekly" && (
 								<>
 									<label>Which days to repeat:</label>
 									<div>
 										{["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => (
 											<label key={index} className="block">
-												<input type="checkbox" name={`day-${index}`} checked={reminderData[`day-${index}`] || false} onChange={handleInputChange} />
+												<input type="checkbox" name={`day-${index}`} checked={initialData[`day-${index}`] || false} onChange={handleInputChange} />
 												{day}
 											</label>
 										))}
 									</div>
 									<label>
 										Time:
-										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+										<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 								</>
 							)}
-							{reminderData.repeatFrequency === "monthly" && (
+							{initialData.repeatFrequency === "monthly" && (
 								<>
 									<label>
 										Select Date:
-										<input type="date" name="date" value={reminderData.date || currentDate} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+										<input type="date" name="date" value={initialData.date} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 									<label>
 										Time:
-										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+										<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 								</>
 							)}
-							{reminderData.repeatFrequency === "yearly" && (
+							{initialData.repeatFrequency === "yearly" && (
 								<>
 									<label>
 										Yearly Reminder Date:
-										<input type="date" name="date" value={reminderData.date || currentDate} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+										<input type="date" name="date" value={initialData.date} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 									<label>
 										Time:
-										<input type="time" name="time" value={reminderData.time || currentTime} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
+										<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 								</>
 							)}
 							<label>
 								Reset Mode:
-								<select name="resetMode" value={reminderData.resetMode} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`}>
+								<select name="resetMode" value={initialData.resetMode} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`}>
 									<option value="manual">Manual</option>
 									<option value="automatic">Automatic</option>
 								</select>
