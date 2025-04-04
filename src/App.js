@@ -117,13 +117,15 @@ const App = () => {
 
 						if (reminder.repeatFrequency === "hourly") {
 							const interval = parseInt(reminder.customInterval) || 1;
-							const [hours, minutes] = reminder.time.split(":");
+							const currentHour = now.getHours();
+							const currentMinute = now.getMinutes();
 							const newTime = new Date();
-							newTime.setHours(parseInt(hours) + interval, parseInt(minutes), 0, 0);
+							newTime.setHours(currentHour, currentMinute, 0, 0);
+							newTime.setHours(newTime.getHours() + interval);
 							reminder.time = `${String(newTime.getHours()).padStart(2, "0")}:${String(newTime.getMinutes()).padStart(2, "0")}`;
 						} else if (reminder.repeatFrequency === "daily") {
 							const interval = parseInt(reminder.customInterval) || 1;
-							const reminderDate = new Date(reminder.date);
+							const reminderDate = new Date();
 							reminderDate.setDate(reminderDate.getDate() + interval);
 							reminder.date = reminderDate.toISOString().split("T")[0];
 						} else if (reminder.repeatFrequency === "weekly") {
@@ -137,20 +139,20 @@ const App = () => {
 
 								const daysToAdd = nextDay > currentDay ? nextDay - currentDay : 7 - currentDay + nextDay;
 
-								const newDate = new Date(reminder.date);
+								const newDate = new Date();
 								newDate.setDate(newDate.getDate() + daysToAdd);
 								reminder.date = newDate.toISOString().split("T")[0];
 							} else {
-								const newDate = new Date(reminder.date);
+								const newDate = new Date();
 								newDate.setDate(newDate.getDate() + 7);
 								reminder.date = newDate.toISOString().split("T")[0];
 							}
 						} else if (reminder.repeatFrequency === "monthly") {
-							const currentDate = new Date(reminder.date);
+							const currentDate = new Date();
 							currentDate.setMonth(currentDate.getMonth() + 1);
 							reminder.date = currentDate.toISOString().split("T")[0];
 						} else if (reminder.repeatFrequency === "yearly") {
-							const currentDate = new Date(reminder.date);
+							const currentDate = new Date();
 							currentDate.setFullYear(currentDate.getFullYear() + 1);
 							reminder.date = currentDate.toISOString().split("T")[0];
 						}
@@ -204,35 +206,54 @@ const App = () => {
 
 		nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
 
-		const localNowHours = now.getHours();
-		if (localNowHours >= 0 && localNowHours < 3 && reminderHour >= 0 && reminderHour < 3 && nextOccurrence < now) {
-			nextOccurrence.setDate(nextOccurrence.getDate() + 1);
+		if (reminder.resetMode === "manual" && reminder.notified) {
+			return nextOccurrence;
 		}
 
-		if (reminder.repeatFrequency === "hourly") {
-			nextOccurrence.setHours(nextOccurrence.getHours() + (reminder.customInterval ? parseInt(reminder.customInterval) : 1));
-		} else if (reminder.repeatFrequency === "daily") {
-			if (nextOccurrence < now) {
-				nextOccurrence.setDate(nextOccurrence.getDate() + (reminder.customInterval ? parseInt(reminder.customInterval) : 1));
-			}
-		} else if (reminder.repeatFrequency === "weekly") {
-			let daysOfWeek = [];
-			for (let i = 0; i < 7; i++) if (reminder[`day-${i}`]) daysOfWeek.push(i);
+		if (nextOccurrence <= now) {
+			if (reminder.repeatFrequency === "hourly") {
+				const interval = parseInt(reminder.customInterval) || 1;
+				const hoursSinceMissed = Math.ceil((now - nextOccurrence) / (1000 * 60 * 60));
+				const hoursToAdd = Math.ceil(hoursSinceMissed / interval) * interval;
+				nextOccurrence.setHours(nextOccurrence.getHours() + hoursToAdd);
+			} else if (reminder.repeatFrequency === "daily") {
+				const interval = parseInt(reminder.customInterval) || 1;
+				const daysSinceMissed = Math.ceil((now - nextOccurrence) / (1000 * 60 * 60 * 24));
+				const daysToAdd = Math.ceil(daysSinceMissed / interval) * interval;
+				nextOccurrence.setDate(nextOccurrence.getDate() + daysToAdd);
+			} else if (reminder.repeatFrequency === "weekly") {
+				let daysOfWeek = [];
+				for (let i = 0; i < 7; i++) if (reminder[`day-${i}`]) daysOfWeek.push(i);
 
-			if (daysOfWeek.length === 0) {
-				daysOfWeek.push(now.getDay());
-			}
+				if (daysOfWeek.length === 0) {
+					daysOfWeek.push(now.getDay());
+				}
 
-			while (!daysOfWeek.includes(nextOccurrence.getDay()) || nextOccurrence <= now) {
-				nextOccurrence.setDate(nextOccurrence.getDate() + 1);
-			}
-		} else if (reminder.repeatFrequency === "monthly") {
-			if (nextOccurrence < now) {
-				nextOccurrence.setMonth(nextOccurrence.getMonth() + 1);
-			}
-		} else if (reminder.repeatFrequency === "yearly") {
-			if (nextOccurrence < now) {
-				nextOccurrence.setFullYear(nextOccurrence.getFullYear() + 1);
+				if (reminder.resetMode === "automatic" || !reminder.notified) {
+					while (!daysOfWeek.includes(nextOccurrence.getDay()) || nextOccurrence <= now) {
+						nextOccurrence.setDate(nextOccurrence.getDate() + 1);
+					}
+				}
+			} else if (reminder.repeatFrequency === "monthly") {
+				if (reminder.resetMode === "automatic" || !reminder.notified) {
+					let monthsToAdd = 1;
+					let tempDate = new Date(nextOccurrence);
+					while (tempDate <= now) {
+						tempDate.setMonth(tempDate.getMonth() + 1);
+						monthsToAdd++;
+					}
+					nextOccurrence.setMonth(nextOccurrence.getMonth() + monthsToAdd - 1);
+				}
+			} else if (reminder.repeatFrequency === "yearly") {
+				if (reminder.resetMode === "automatic" || !reminder.notified) {
+					let yearsToAdd = 1;
+					let tempDate = new Date(nextOccurrence);
+					while (tempDate <= now) {
+						tempDate.setFullYear(tempDate.getFullYear() + 1);
+						yearsToAdd++;
+					}
+					nextOccurrence.setFullYear(nextOccurrence.getFullYear() + yearsToAdd - 1);
+				}
 			}
 		}
 
@@ -529,9 +550,8 @@ const App = () => {
 				const now = new Date();
 				const localDate = new Date(now.toLocaleString("en-US", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }));
 
-				const currentHour = localDate.getHours();
-				const currentMinute = localDate.getMinutes();
 				reminder.checked = false;
+				reminder.notified = false;
 
 				const formatDate = (date) => {
 					return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -539,41 +559,76 @@ const App = () => {
 
 				switch (reminder.repeatFrequency) {
 					case "hourly":
-						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						const hourInterval = parseInt(reminder.customInterval) || 1;
+						const newHourTime = new Date(localDate);
+						newHourTime.setHours(newHourTime.getHours() + hourInterval);
+						reminder.time = `${String(newHourTime.getHours()).padStart(2, "0")}:${String(newHourTime.getMinutes()).padStart(2, "0")}`;
 						break;
 					case "daily":
-						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
-						reminder.date = formatDate(localDate);
+						const dayInterval = parseInt(reminder.customInterval) || 1;
+						const newDailyDate = new Date(localDate);
+						newDailyDate.setDate(newDailyDate.getDate() + dayInterval);
+						reminder.date = formatDate(newDailyDate);
+						reminder.time = reminder.time;
 						break;
 					case "weekly":
-						localDate.setDate(localDate.getDate() + 7);
-						reminder.date = formatDate(localDate);
-						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						let daysOfWeek = [];
+						for (let i = 0; i < 7; i++) {
+							if (reminder[`day-${i}`]) daysOfWeek.push(i);
+						}
+
+						if (daysOfWeek.length > 0) {
+							const currentDay = localDate.getDay();
+							let nextDay = daysOfWeek.find((day) => day > currentDay);
+							if (nextDay === undefined) nextDay = daysOfWeek[0];
+
+							const daysToAdd = nextDay > currentDay ? nextDay - currentDay : 7 - currentDay + nextDay;
+
+							const newDate = new Date(localDate);
+							newDate.setDate(newDate.getDate() + daysToAdd);
+							reminder.date = formatDate(newDate);
+						} else {
+							const newDate = new Date(localDate);
+							newDate.setDate(newDate.getDate() + 7);
+							reminder.date = formatDate(newDate);
+						}
+						reminder.time = reminder.time;
 						break;
 					case "monthly":
-						const currentDay = localDate.getDate();
-						const currentMonth = localDate.getMonth();
-						localDate.setMonth(localDate.getMonth() + 1);
+						const newMonthDate = new Date(localDate);
+						newMonthDate.setMonth(newMonthDate.getMonth() + 1);
 
-						if (currentDay < 29 || localDate.getDate() >= currentDay) {
-							reminder.date = formatDate(localDate);
+						const dayOfMonth = parseInt(reminder.date.split("-")[2]);
+						const lastDayOfNextMonth = new Date(newMonthDate.getFullYear(), newMonthDate.getMonth() + 1, 0).getDate();
+
+						if (dayOfMonth <= lastDayOfNextMonth) {
+							newMonthDate.setDate(dayOfMonth);
 						} else {
-							const lastDay = new Date(localDate.getFullYear(), localDate.getMonth() + 1, 0);
-							reminder.date = formatDate(lastDay);
+							newMonthDate.setDate(lastDayOfNextMonth);
 						}
 
-						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						reminder.date = formatDate(newMonthDate);
+						reminder.time = reminder.time;
 						break;
 					case "yearly":
-						const currentYear = localDate.getFullYear();
-						localDate.setFullYear(currentYear + 1);
+						const newYearDate = new Date(localDate);
+						newYearDate.setFullYear(newYearDate.getFullYear() + 1);
 
-						if (localDate.getMonth() === 1 && localDate.getDate() === 29) {
-							localDate.setDate(28);
+						if (newYearDate.getMonth() === 1 && parseInt(reminder.date.split("-")[2]) === 29) {
+							const isLeapYear = (newYearDate.getFullYear() % 4 === 0 && newYearDate.getFullYear() % 100 !== 0) || newYearDate.getFullYear() % 400 === 0;
+							if (!isLeapYear) {
+								newYearDate.setDate(28);
+							} else {
+								newYearDate.setDate(29);
+							}
+						} else {
+							const [year, month, day] = reminder.date.split("-");
+							newYearDate.setMonth(parseInt(month) - 1);
+							newYearDate.setDate(parseInt(day));
 						}
 
-						reminder.date = formatDate(localDate);
-						reminder.time = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
+						reminder.date = formatDate(newYearDate);
+						reminder.time = reminder.time;
 						break;
 					default:
 						break;
@@ -581,14 +636,12 @@ const App = () => {
 
 				const nextOccurrence = getNextOccurrence(reminder);
 				const timeDiff = nextOccurrence - now;
-				const daysUntilNextOccurrence = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
 
 				setRepeatedCountdowns((prevCountdowns) => {
-					const updatedCountdowns = {
+					return {
 						...prevCountdowns,
 						[reminder.id]: formatCountdown(timeDiff),
 					};
-					return updatedCountdowns;
 				});
 
 				setReminders(updatedReminders);
