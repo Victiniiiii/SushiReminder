@@ -105,25 +105,62 @@ const App = () => {
 				const timeDiff = nextOccurrence - now;
 
 				if (timeDiff <= 1000) {
-					const handleReminderRestart = async (reminder, now) => {
-						if (!reminder.notified) {
-							reminder.notified = true;
-							sendNotification(`Repeated Reminder: ${reminder.name}`);
-						}
+					if (!reminder.notified) {
+						reminder.notified = true;
+						sendNotification(`Repeated Reminder: ${reminder.name}`);
+					}
 
+					if (reminder.resetMode === "automatic") {
 						reminder.date = now.toISOString().split("T")[0];
+						reminder.checked = false;
+						reminder.notified = false;
 
-						if (reminder.resetMode === "automatic") {
-							const newNextOccurrence = getNextOccurrence(reminder, true);
-							newRepeatedCountdowns[reminder.id] = formatCountdown(newNextOccurrence - now);
-							reminder.checked = false;
-							reminder.notified = false;
-						} else {
-							newRepeatedCountdowns[reminder.id] = "Time's up!";
+						if (reminder.repeatFrequency === "hourly") {
+							const interval = parseInt(reminder.customInterval) || 1;
+							const [hours, minutes] = reminder.time.split(":");
+							const newTime = new Date();
+							newTime.setHours(parseInt(hours) + interval, parseInt(minutes), 0, 0);
+							reminder.time = `${String(newTime.getHours()).padStart(2, "0")}:${String(newTime.getMinutes()).padStart(2, "0")}`;
+						} else if (reminder.repeatFrequency === "daily") {
+							const interval = parseInt(reminder.customInterval) || 1;
+							const reminderDate = new Date(reminder.date);
+							reminderDate.setDate(reminderDate.getDate() + interval);
+							reminder.date = reminderDate.toISOString().split("T")[0];
+						} else if (reminder.repeatFrequency === "weekly") {
+							let daysOfWeek = [];
+							for (let i = 0; i < 7; i++) if (reminder[`day-${i}`]) daysOfWeek.push(i);
+
+							if (daysOfWeek.length > 0) {
+								const currentDay = now.getDay();
+								let nextDay = daysOfWeek.find((day) => day > currentDay);
+								if (nextDay === undefined) nextDay = daysOfWeek[0];
+
+								const daysToAdd = nextDay > currentDay ? nextDay - currentDay : 7 - currentDay + nextDay;
+
+								const newDate = new Date(reminder.date);
+								newDate.setDate(newDate.getDate() + daysToAdd);
+								reminder.date = newDate.toISOString().split("T")[0];
+							} else {
+								const newDate = new Date(reminder.date);
+								newDate.setDate(newDate.getDate() + 7);
+								reminder.date = newDate.toISOString().split("T")[0];
+							}
+						} else if (reminder.repeatFrequency === "monthly") {
+							const currentDate = new Date(reminder.date);
+							currentDate.setMonth(currentDate.getMonth() + 1);
+							reminder.date = currentDate.toISOString().split("T")[0];
+						} else if (reminder.repeatFrequency === "yearly") {
+							const currentDate = new Date(reminder.date);
+							currentDate.setFullYear(currentDate.getFullYear() + 1);
+							reminder.date = currentDate.toISOString().split("T")[0];
 						}
-					};
-					handleReminderRestart(reminder, now);
-				} else if (!(newRepeatedCountdowns[reminder.id] == "Time's up!")) {
+
+						const newNextOccurrence = getNextOccurrence(reminder);
+						newRepeatedCountdowns[reminder.id] = formatCountdown(newNextOccurrence - now);
+					} else {
+						newRepeatedCountdowns[reminder.id] = "Time's up!";
+					}
+				} else {
 					newRepeatedCountdowns[reminder.id] = formatCountdown(timeDiff);
 				}
 			});
@@ -136,6 +173,19 @@ const App = () => {
 
 		return () => clearInterval(interval);
 	}, [reminders, oneTimeCountdowns, repeatedCountdowns]);
+
+	const handleOpenCreateModal = () => {
+		setReminderData({
+			name: "",
+			date: new Date().toISOString().split("T")[0],
+			time: new Date().toTimeString().slice(0, 5),
+			repeatFrequency: "hourly",
+			resetMode: "manual",
+			customInterval: "",
+		});
+		setReminderType("one-time");
+		setIsModalOpen(true);
+	};
 
 	const getNextOccurrence = (reminder) => {
 		const now = new Date();
@@ -151,29 +201,37 @@ const App = () => {
 		const reminderTime = reminder.time.split(":");
 		const reminderHour = parseInt(reminderTime[0]);
 		const reminderMinute = parseInt(reminderTime[1]);
+
 		nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+
+		const localNowHours = now.getHours();
+		if (localNowHours >= 0 && localNowHours < 3 && reminderHour >= 0 && reminderHour < 3 && nextOccurrence < now) {
+			nextOccurrence.setDate(nextOccurrence.getDate() + 1);
+		}
 
 		if (reminder.repeatFrequency === "hourly") {
 			nextOccurrence.setHours(nextOccurrence.getHours() + (reminder.customInterval ? parseInt(reminder.customInterval) : 1));
 		} else if (reminder.repeatFrequency === "daily") {
-			nextOccurrence.setDate(nextOccurrence.getDate() + (reminder.customInterval ? parseInt(reminder.customInterval) : 1));
+			if (nextOccurrence < now) {
+				nextOccurrence.setDate(nextOccurrence.getDate() + (reminder.customInterval ? parseInt(reminder.customInterval) : 1));
+			}
 		} else if (reminder.repeatFrequency === "weekly") {
-			let daysToAdd = 0;
-			const daysOfWeek = [];
+			let daysOfWeek = [];
 			for (let i = 0; i < 7; i++) if (reminder[`day-${i}`]) daysOfWeek.push(i);
+
+			if (daysOfWeek.length === 0) {
+				daysOfWeek.push(now.getDay());
+			}
+
 			while (!daysOfWeek.includes(nextOccurrence.getDay()) || nextOccurrence <= now) {
 				nextOccurrence.setDate(nextOccurrence.getDate() + 1);
 			}
 		} else if (reminder.repeatFrequency === "monthly") {
-			const nextMonth = new Date(nextOccurrence);
-			nextMonth.setMonth(nextMonth.getMonth() + 1);
-			if (nextMonth.getDate() < nextOccurrence.getDate()) {
+			if (nextOccurrence < now) {
 				nextOccurrence.setMonth(nextOccurrence.getMonth() + 1);
 			}
 		} else if (reminder.repeatFrequency === "yearly") {
-			const nextYear = new Date(nextOccurrence);
-			nextYear.setFullYear(nextYear.getFullYear() + 1);
-			if (nextYear.getDate() < nextOccurrence.getDate()) {
+			if (nextOccurrence < now) {
 				nextOccurrence.setFullYear(nextOccurrence.getFullYear() + 1);
 			}
 		}
@@ -284,6 +342,8 @@ const App = () => {
 	};
 
 	const formatCountdown = (timeDiff) => {
+		timeDiff = Math.max(0, timeDiff);
+
 		const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
 		const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
 		const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
@@ -336,11 +396,7 @@ const App = () => {
 			timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 		}).format(new Date());
 
-		const initialData = {
-			...reminderData,
-			date: reminderData.id ? reminderData.date : currentDate,
-			time: reminderData.id ? reminderData.time : currentTime,
-		};
+		const initialData = { ...reminderData };
 
 		return (
 			<div className={`${isDarkMode ? "dark" : "light"} fixed inset-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center`}>
@@ -622,7 +678,24 @@ const App = () => {
 														color: (type === "oneTime" && oneTimeCountdowns[reminder.id] === "Time's up!") || (type === "repeated" && repeatedCountdowns[reminder.id] === "Time's up!") ? "red" : "inherit",
 													}}
 												>
-													{reminder.name} - {type === "oneTime" ? formatDateTime(reminder.date, reminder.time) : formatDateTime("", reminder.time)} - {type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating..."}
+													{reminder.name} -{" "}
+													{type === "oneTime"
+														? formatDateTime(reminder.date, reminder.time)
+														: (() => {
+																const nextOccurrence = getNextOccurrence(reminder);
+																const hours = String(nextOccurrence.getHours()).padStart(2, "0");
+																const minutes = String(nextOccurrence.getMinutes()).padStart(2, "0");
+
+																const today = new Date();
+																if (nextOccurrence.toDateString() === today.toDateString()) {
+																	return `Today at ${hours}:${minutes}`;
+																} else if (nextOccurrence.getDate() === today.getDate() + 1 && nextOccurrence.getMonth() === today.getMonth() && nextOccurrence.getFullYear() === today.getFullYear()) {
+																	return `Tomorrow at ${hours}:${minutes}`;
+																} else {
+																	return formatDateTime(nextOccurrence.toISOString().split("T")[0], `${hours}:${minutes}`);
+																}
+														  })()}{" "}
+													- {type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating..."}{" "}
 												</span>
 											</div>
 											<div className="rightSide gap-2 flex">
@@ -680,7 +753,7 @@ const App = () => {
 		>
 			<Titlebar isDarkMode={isDarkMode} />
 			<main className="h-full">
-				<Header setIsModalOpen={setIsModalOpen} isDarkMode={isDarkMode} />
+				<Header setIsModalOpen={handleOpenCreateModal} isDarkMode={isDarkMode} />
 				<Navbar activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} />
 				<div>{renderTabContent()}</div>
 			</main>

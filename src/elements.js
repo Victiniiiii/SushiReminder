@@ -25,7 +25,12 @@ export const Titlebar = ({ isDarkMode }) => (
 export const Header = ({ setIsModalOpen, isDarkMode }) => (
 	<header className={`text-center flex justify-center items-center h-20 ${isDarkMode ? "bg-[#1c0738]" : "bg-[#6200ea]"} text-white`}>
 		<h1 className="text-[33px] w-80">SushiReminder</h1>
-		<button className={`absolute right-3 text-[15px] h-auto border-white border-2 cursor-pointer py-2 px-2 rounded-xl ${isDarkMode ? "bg-blue-800" : "bg-blue-900"}`} onClick={() => setIsModalOpen(true)}>
+		<button
+			className={`absolute right-3 text-[15px] h-auto border-white border-2 cursor-pointer py-2 px-2 rounded-xl ${isDarkMode ? "bg-blue-800" : "bg-blue-900"}`}
+			onClick={() => {
+				setIsModalOpen(true);
+			}}
+		>
 			Create Reminder
 		</button>
 	</header>
