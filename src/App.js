@@ -45,11 +45,7 @@ const App = () => {
 		const loadReminders = async () => {
 			if (!trayExists) {
 				setTrayExists(true);
-				try {
-					const tray = new TrayIcon(options);
-				} catch (error) {
-					console.log(error);
-				}
+				const tray = await TrayIcon.new(options);
 			}
 
 			if (!(await isPermissionGranted(BaseDirectory.Document))) {

@@ -29,6 +29,7 @@ const menu = await Menu.new({
 export const options = {
 	icon: await defaultWindowIcon(),
 	menu,
-    tooltip: 'SushiReminder',
 	menuOnLeftClick: false,
+    title: "SushiReminder",
+    tooltip: "SushiReminder"
 };
