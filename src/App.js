@@ -191,7 +191,8 @@ const App = () => {
 			resetMode: "manual",
 			customInterval: "",
 		});
-		setReminderType("one-time");
+
+		activeTab === "repeated" ? setReminderType("repeated") : setReminderType("one-time");
 		setIsModalOpen(true);
 	};
 
@@ -217,7 +218,12 @@ const App = () => {
 		}
 
 		if (nextOccurrence <= now) {
-			if (reminder.repeatFrequency === "hourly") {
+			if (reminder.repeatFrequency === "minute") {
+				const interval = parseInt(reminder.customInterval) || 1;
+				const minutesSinceMissed = Math.ceil((now - nextOccurrence) / (1000 * 60));
+				const minutesToAdd = Math.ceil(minutesSinceMissed / interval) * interval;
+				nextOccurrence.setMinutes(nextOccurrence.getMinutes() + minutesToAdd);
+			} else if (reminder.repeatFrequency === "hourly") {
 				const interval = parseInt(reminder.customInterval) || 1;
 				const hoursSinceMissed = Math.ceil((now - nextOccurrence) / (1000 * 60 * 60));
 				const hoursToAdd = Math.ceil(hoursSinceMissed / interval) * interval;
@@ -456,6 +462,7 @@ const App = () => {
 							<label>
 								Frequency:
 								<select name="repeatFrequency" value={initialData.repeatFrequency} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`}>
+									<option value="minute">Minute</option>
 									<option value="hourly">Hourly</option>
 									<option value="daily">Daily</option>
 									<option value="weekly">Weekly</option>
@@ -463,14 +470,14 @@ const App = () => {
 									<option value="yearly">Yearly</option>
 								</select>
 							</label>
-							{initialData.repeatFrequency === "hourly" || initialData.repeatFrequency === "daily" ? (
+							{initialData.repeatFrequency === "minute" || initialData.repeatFrequency === "hourly" || initialData.repeatFrequency === "daily" ? (
 								<>
 									<label>
 										Time:
 										<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 									<label>
-										Custom Interval (in hours/days):
+										Custom Interval (in {initialData.repeatFrequency === "minute" ? "minutes" : initialData.repeatFrequency === "hourly" ? "hours" : "days"}):
 										<input type="number" name="customInterval" value={initialData.customInterval || 1} onChange={handleInputChange} min="1" className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
 								</>
@@ -556,6 +563,8 @@ const App = () => {
 				const now = new Date();
 				const localDate = new Date(now.toLocaleString("en-US", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }));
 
+				reminder.time = `${String(localDate.getHours()).padStart(2, "0")}:${String(localDate.getMinutes()).padStart(2, "0")}`;
+
 				reminder.checked = false;
 				reminder.notified = false;
 
@@ -564,6 +573,12 @@ const App = () => {
 				};
 
 				switch (reminder.repeatFrequency) {
+					case "minute":
+						const minuteInterval = parseInt(reminder.customInterval) || 1;
+						const newMinuteTime = new Date(localDate);
+						newMinuteTime.setMinutes(newMinuteTime.getMinutes() + minuteInterval);
+						reminder.time = `${String(newMinuteTime.getHours()).padStart(2, "0")}:${String(newMinuteTime.getMinutes()).padStart(2, "0")}`;
+						break;
 					case "hourly":
 						const hourInterval = parseInt(reminder.customInterval) || 1;
 						const newHourTime = new Date(localDate);
