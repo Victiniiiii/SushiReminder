@@ -5,7 +5,6 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 
 const appWindow = getCurrentWindow();
 
-// two u's in the menu fixed a bug for some reason
 const menu = await Menu.new({
 	items: [
 		{

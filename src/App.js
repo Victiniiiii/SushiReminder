@@ -29,8 +29,8 @@ const App = () => {
 	const [reminders, setReminders] = useState({ oneTime: [], repeated: [] });
 	const [reminderData, setReminderData] = useState({
 		name: "",
-		date: new Date().toISOString().split("T")[0],
-		time: new Date().toTimeString().slice(0, 5),
+		date: new Date().toLocaleDateString("en-CA"),
+		time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
 		repeatFrequency: "hourly",
 		resetMode: "manual",
 		customInterval: "",
@@ -40,7 +40,7 @@ const App = () => {
 	useEffect(() => {
 		document.getElementById("minimizeButton")?.addEventListener("click", () => appWindow.minimize());
 		document.getElementById("hideButton")?.addEventListener("click", () => appWindow.hide());
-		document.getElementById("closeButton")?.addEventListener("click", () => appWindow.destroy());
+		document.getElementById("closeButton")?.addEventListener("click", async () => appWindow.destroy());
 
 		const loadReminders = async () => {
 			if (!trayExists) {
@@ -111,7 +111,7 @@ const App = () => {
 					}
 
 					if (reminder.resetMode === "automatic") {
-						reminder.date = now.toISOString().split("T")[0];
+						reminder.date = now.toLocaleDateString("en-CA");
 						reminder.checked = false;
 						reminder.notified = false;
 
@@ -127,7 +127,7 @@ const App = () => {
 							const interval = parseInt(reminder.customInterval) || 1;
 							const reminderDate = new Date();
 							reminderDate.setDate(reminderDate.getDate() + interval);
-							reminder.date = reminderDate.toISOString().split("T")[0];
+							reminder.date = reminderDate.toLocaleDateString("en-CA");
 						} else if (reminder.repeatFrequency === "weekly") {
 							let daysOfWeek = [];
 							for (let i = 0; i < 7; i++) if (reminder[`day-${i}`]) daysOfWeek.push(i);
@@ -141,20 +141,20 @@ const App = () => {
 
 								const newDate = new Date();
 								newDate.setDate(newDate.getDate() + daysToAdd);
-								reminder.date = newDate.toISOString().split("T")[0];
+								reminder.date = newDate.toLocaleDateString("en-CA");
 							} else {
 								const newDate = new Date();
 								newDate.setDate(newDate.getDate() + 7);
-								reminder.date = newDate.toISOString().split("T")[0];
+								reminder.date = newDate.toLocaleDateString("en-CA");
 							}
 						} else if (reminder.repeatFrequency === "monthly") {
 							const currentDate = new Date();
 							currentDate.setMonth(currentDate.getMonth() + 1);
-							reminder.date = currentDate.toISOString().split("T")[0];
+							reminder.date = currentDate.toLocaleDateString("en-CA");
 						} else if (reminder.repeatFrequency === "yearly") {
 							const currentDate = new Date();
 							currentDate.setFullYear(currentDate.getFullYear() + 1);
-							reminder.date = currentDate.toISOString().split("T")[0];
+							reminder.date = currentDate.toLocaleDateString("en-CA");
 						}
 
 						const newNextOccurrence = getNextOccurrence(reminder);
@@ -201,17 +201,28 @@ const App = () => {
 		let nextOccurrence = new Date();
 
 		if (reminder.date) {
-			const lastDateParts = reminder.date.split("-");
-			nextOccurrence.setFullYear(parseInt(lastDateParts[0]), parseInt(lastDateParts[1]) - 1, parseInt(lastDateParts[2]));
+			const [year, month, day] = reminder.date.split("-").map((num) => parseInt(num, 10));
+			nextOccurrence.setFullYear(year);
+			nextOccurrence.setMonth(month - 1);
+			nextOccurrence.setDate(day);
 		} else {
-			reminder.date = now.toISOString().split("T")[0];
+			const year = now.getFullYear();
+			const month = now.getMonth();
+			const day = now.getDate();
+			nextOccurrence.setFullYear(year);
+			nextOccurrence.setMonth(month);
+			nextOccurrence.setDate(day);
+
+			reminder.date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 		}
 
-		const reminderTime = reminder.time.split(":");
-		const reminderHour = parseInt(reminderTime[0]);
-		const reminderMinute = parseInt(reminderTime[1]);
-
-		nextOccurrence.setHours(reminderHour, reminderMinute, 0, 0);
+		if (reminder.time) {
+			const [hours, minutes] = reminder.time.split(":").map((num) => parseInt(num, 10));
+			nextOccurrence.setHours(hours);
+			nextOccurrence.setMinutes(minutes);
+			nextOccurrence.setSeconds(0);
+			nextOccurrence.setMilliseconds(0);
+		}
 
 		if (reminder.resetMode === "manual" && reminder.notified) {
 			return nextOccurrence;
@@ -235,7 +246,9 @@ const App = () => {
 				nextOccurrence.setDate(nextOccurrence.getDate() + daysToAdd);
 			} else if (reminder.repeatFrequency === "weekly") {
 				let daysOfWeek = [];
-				for (let i = 0; i < 7; i++) if (reminder[`day-${i}`]) daysOfWeek.push(i);
+				for (let i = 0; i < 7; i++) {
+					if (reminder[`day-${i}`]) daysOfWeek.push(i);
+				}
 
 				if (daysOfWeek.length === 0) {
 					daysOfWeek.push(now.getDay());
@@ -300,7 +313,7 @@ const App = () => {
 
 			while (selectedDateTime < now) {
 				if (reminderData.repeatFrequency === "minute") {
-                    selectedDateTime.setMinutes(selectedDateTime.getMinutes() + (customInterval || 1));
+					selectedDateTime.setMinutes(selectedDateTime.getMinutes() + (customInterval || 1));
 				} else if (reminderData.repeatFrequency === "hourly") {
 					selectedDateTime.setHours(selectedDateTime.getHours() + (customInterval || 1));
 				} else if (reminderData.repeatFrequency === "daily") {
@@ -345,8 +358,8 @@ const App = () => {
 		setIsModalOpen(false);
 		setReminderData({
 			name: "",
-			date: new Date().toISOString().split("T")[0],
-			time: new Date().toTimeString().slice(0, 5),
+			date: new Date().toLocaleDateString("en-CA"),
+			time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
 			repeatFrequency: "hourly",
 			resetMode: "manual",
 			customInterval: "",
@@ -423,12 +436,11 @@ const App = () => {
 	};
 
 	const renderModalContent = () => {
-		const currentDate = new Date().toISOString().split("T")[0];
-		const currentTime = new Intl.DateTimeFormat("en-US", {
+		const currentDate = new Date().toLocaleDateString("en-CA");
+		const currentTime = new Intl.DateTimeFormat("en-CA", {
 			hour: "2-digit",
 			minute: "2-digit",
 			hour12: false,
-			timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 		}).format(new Date());
 
 		const initialData = { ...reminderData };
@@ -561,117 +573,101 @@ const App = () => {
 			const updatedReminders = { ...reminders };
 			const reminder = updatedReminders.repeated.find((reminder) => reminder.id === id);
 
-			if (reminder) {
-				const now = new Date();
-				const localDate = new Date(now.toLocaleString("en-US", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }));
+			if (!reminder) {
+				console.warn(`Reminder with ID=${id} not found.`);
+				return;
+			}
 
-				reminder.time = `${String(localDate.getHours()).padStart(2, "0")}:${String(localDate.getMinutes()).padStart(2, "0")}`;
+			const now = new Date();
 
-				reminder.checked = false;
-				reminder.notified = false;
+			const hours = now.getHours();
+			const minutes = now.getMinutes();
+			const formattedTime = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 
-				const formatDate = (date) => {
-					return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-				};
+			const year = now.getFullYear();
+			const month = now.getMonth() + 1;
+			const day = now.getDate();
+			const formattedDate = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-				switch (reminder.repeatFrequency) {
-					case "minute":
-						const minuteInterval = parseInt(reminder.customInterval) || 1;
-						const newMinuteTime = new Date(localDate);
-						newMinuteTime.setMinutes(newMinuteTime.getMinutes() + minuteInterval);
-						reminder.time = `${String(newMinuteTime.getHours()).padStart(2, "0")}:${String(newMinuteTime.getMinutes()).padStart(2, "0")}`;
-						break;
-					case "hourly":
-						const hourInterval = parseInt(reminder.customInterval) || 1;
-						const newHourTime = new Date(localDate);
-						newHourTime.setHours(newHourTime.getHours() + hourInterval);
-						reminder.time = `${String(newHourTime.getHours()).padStart(2, "0")}:${String(newHourTime.getMinutes()).padStart(2, "0")}`;
-						break;
-					case "daily":
-						const dayInterval = parseInt(reminder.customInterval) || 1;
-						const newDailyDate = new Date(localDate);
-						newDailyDate.setDate(newDailyDate.getDate() + dayInterval);
-						reminder.date = formatDate(newDailyDate);
-						reminder.time = reminder.time;
-						break;
-					case "weekly":
-						let daysOfWeek = [];
-						for (let i = 0; i < 7; i++) {
-							if (reminder[`day-${i}`]) daysOfWeek.push(i);
-						}
+			reminder.checked = false;
+			reminder.notified = false;
+			reminder.time = formattedTime;
 
-						if (daysOfWeek.length > 0) {
-							const currentDay = localDate.getDay();
-							let nextDay = daysOfWeek.find((day) => day > currentDay);
-							if (nextDay === undefined) nextDay = daysOfWeek[0];
+			const interval = parseInt(reminder.customInterval) || 1;
 
-							const daysToAdd = nextDay > currentDay ? nextDay - currentDay : 7 - currentDay + nextDay;
+			if (reminder.repeatFrequency === "minute") {
+				const nextDate = new Date(now);
+				nextDate.setMinutes(nextDate.getMinutes() + interval);
 
-							const newDate = new Date(localDate);
-							newDate.setDate(newDate.getDate() + daysToAdd);
-							reminder.date = formatDate(newDate);
-						} else {
-							const newDate = new Date(localDate);
-							newDate.setDate(newDate.getDate() + 7);
-							reminder.date = formatDate(newDate);
-						}
-						reminder.time = reminder.time;
-						break;
-					case "monthly":
-						const newMonthDate = new Date(localDate);
-						newMonthDate.setMonth(newMonthDate.getMonth() + 1);
+				reminder.time = `${String(nextDate.getHours()).padStart(2, "0")}:${String(nextDate.getMinutes()).padStart(2, "0")}`;
+			} else if (reminder.repeatFrequency === "hourly") {
+				const nextDate = new Date(now);
+				nextDate.setHours(nextDate.getHours() + interval);
 
-						const dayOfMonth = parseInt(reminder.date.split("-")[2]);
-						const lastDayOfNextMonth = new Date(newMonthDate.getFullYear(), newMonthDate.getMonth() + 1, 0).getDate();
+				reminder.time = `${String(nextDate.getHours()).padStart(2, "0")}:${String(nextDate.getMinutes()).padStart(2, "0")}`;
+			} else if (reminder.repeatFrequency === "daily") {
+				const nextDate = new Date(now);
+				nextDate.setDate(nextDate.getDate() + interval);
 
-						if (dayOfMonth <= lastDayOfNextMonth) {
-							newMonthDate.setDate(dayOfMonth);
-						} else {
-							newMonthDate.setDate(lastDayOfNextMonth);
-						}
-
-						reminder.date = formatDate(newMonthDate);
-						reminder.time = reminder.time;
-						break;
-					case "yearly":
-						const newYearDate = new Date(localDate);
-						newYearDate.setFullYear(newYearDate.getFullYear() + 1);
-
-						if (newYearDate.getMonth() === 1 && parseInt(reminder.date.split("-")[2]) === 29) {
-							const isLeapYear = (newYearDate.getFullYear() % 4 === 0 && newYearDate.getFullYear() % 100 !== 0) || newYearDate.getFullYear() % 400 === 0;
-							if (!isLeapYear) {
-								newYearDate.setDate(28);
-							} else {
-								newYearDate.setDate(29);
-							}
-						} else {
-							const [year, month, day] = reminder.date.split("-");
-							newYearDate.setMonth(parseInt(month) - 1);
-							newYearDate.setDate(parseInt(day));
-						}
-
-						reminder.date = formatDate(newYearDate);
-						reminder.time = reminder.time;
-						break;
-					default:
-						break;
+				reminder.date = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}-${String(nextDate.getDate()).padStart(2, "0")}`;
+			} else if (reminder.repeatFrequency === "weekly") {
+				let daysOfWeek = [];
+				for (let i = 0; i < 7; i++) {
+					if (reminder[`day-${i}`]) daysOfWeek.push(i);
 				}
 
-				const nextOccurrence = getNextOccurrence(reminder);
-				const timeDiff = nextOccurrence - now;
+				let nextDate = new Date(now);
+				const currentDay = now.getDay();
 
-				setRepeatedCountdowns((prevCountdowns) => {
-					return {
-						...prevCountdowns,
-						[reminder.id]: formatCountdown(timeDiff),
-					};
-				});
+				if (daysOfWeek.length > 0) {
+					let nextDay = daysOfWeek.find((day) => day > currentDay);
+					if (nextDay === undefined) nextDay = daysOfWeek[0];
 
-				setReminders(updatedReminders);
-				await writeTextFile("reminders.json", JSON.stringify(updatedReminders), { baseDir: BaseDirectory.Document });
-			} else {
-				console.warn(`Reminder with ID=${id} not found.`);
+					const daysToAdd = nextDay > currentDay ? nextDay - currentDay : 7 - currentDay + nextDay;
+					nextDate.setDate(now.getDate() + daysToAdd);
+				} else {
+					nextDate.setDate(now.getDate() + 7);
+				}
+
+				reminder.date = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}-${String(nextDate.getDate()).padStart(2, "0")}`;
+			} else if (reminder.repeatFrequency === "monthly") {
+				const nextDate = new Date(now);
+				nextDate.setMonth(now.getMonth() + 1);
+
+				const dayOfMonth = parseInt(reminder.date.split("-")[2]);
+				const lastDayOfNextMonth = new Date(nextDate.getFullYear(), nextDate.getMonth() + 1, 0).getDate();
+
+				nextDate.setDate(Math.min(dayOfMonth, lastDayOfNextMonth));
+
+				reminder.date = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}-${String(nextDate.getDate()).padStart(2, "0")}`;
+			} else if (reminder.repeatFrequency === "yearly") {
+				const [year, month, day] = reminder.date.split("-").map(Number);
+				const nextDate = new Date();
+				nextDate.setFullYear(nextDate.getFullYear() + 1);
+				nextDate.setMonth(month - 1);
+
+				if (month === 2 && day === 29) {
+					const isLeapYear = (nextDate.getFullYear() % 4 === 0 && nextDate.getFullYear() % 100 !== 0) || nextDate.getFullYear() % 400 === 0;
+					nextDate.setDate(isLeapYear ? 29 : 28);
+				} else {
+					nextDate.setDate(day);
+				}
+
+				reminder.date = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}-${String(nextDate.getDate()).padStart(2, "0")}`;
 			}
+
+			const nextOccurrence = getNextOccurrence(reminder);
+			const timeDiff = nextOccurrence - now;
+
+			setRepeatedCountdowns((prevCountdowns) => ({
+				...prevCountdowns,
+				[reminder.id]: formatCountdown(timeDiff),
+			}));
+
+			setReminders(updatedReminders);
+			await writeTextFile("reminders.json", JSON.stringify(updatedReminders), {
+				baseDir: BaseDirectory.Document,
+			});
 		};
 
 		const handleToggleCheckbox = async (id) => {
@@ -768,7 +764,7 @@ const App = () => {
 																} else if (nextOccurrence.getDate() === today.getDate() + 1 && nextOccurrence.getMonth() === today.getMonth() && nextOccurrence.getFullYear() === today.getFullYear()) {
 																	return `Tomorrow at ${hours}:${minutes}`;
 																} else {
-																	return formatDateTime(nextOccurrence.toISOString().split("T")[0], `${hours}:${minutes}`);
+																	return formatDateTime(nextOccurrence.toLocaleDateString("en-CA"), `${hours}:${minutes}`);
 																}
 														  })()}{" "}
 													- {type === "oneTime" ? oneTimeCountdowns[reminder.id] : repeatedCountdowns[reminder.id] || "Calculating..."}{" "}
