@@ -45,7 +45,11 @@ const App = () => {
 		const loadReminders = async () => {
 			if (!trayExists) {
 				setTrayExists(true);
-				const tray = new TrayIcon(options);
+				try {
+					const tray = new TrayIcon(options);
+				} catch (error) {
+					console.log(error);
+				}
 			}
 
 			if (!(await isPermissionGranted(BaseDirectory.Document))) {
@@ -177,10 +181,16 @@ const App = () => {
 	}, [reminders, oneTimeCountdowns, repeatedCountdowns]);
 
 	const handleOpenCreateModal = () => {
+		const now = new Date();
+		const localDateString = now.toLocaleDateString("en-CA");
+		const localHours = String(now.getHours()).padStart(2, "0");
+		const localMinutes = String(now.getMinutes()).padStart(2, "0");
+		const localTimeString = `${localHours}:${localMinutes}`;
+
 		setReminderData({
 			name: "",
-			date: new Date().toISOString().split("T")[0],
-			time: new Date().toTimeString().slice(0, 5),
+			date: localDateString,
+			time: localTimeString,
 			repeatFrequency: "hourly",
 			resetMode: "manual",
 			customInterval: "",
@@ -726,7 +736,7 @@ const App = () => {
 										<div {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef} className="reminder-item justify-between">
 											<div className="leftSide">
 												<span
-													className={reminder.checked ? "line-through" : ""}
+													className={reminder.checked ? "!line-through !text-gray-500" : ""}
 													style={{
 														color: (type === "oneTime" && oneTimeCountdowns[reminder.id] === "Time's up!") || (type === "repeated" && repeatedCountdowns[reminder.id] === "Time's up!") ? "red" : "inherit",
 													}}
