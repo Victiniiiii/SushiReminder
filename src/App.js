@@ -299,7 +299,9 @@ const App = () => {
 			selectedDateTime.setHours(repeatHours, repeatMinutes, 0, 0);
 
 			while (selectedDateTime < now) {
-				if (reminderData.repeatFrequency === "hourly") {
+				if (reminderData.repeatFrequency === "minute") {
+                    selectedDateTime.setMinutes(selectedDateTime.getMinutes() + (customInterval || 1));
+				} else if (reminderData.repeatFrequency === "hourly") {
 					selectedDateTime.setHours(selectedDateTime.getHours() + (customInterval || 1));
 				} else if (reminderData.repeatFrequency === "daily") {
 					selectedDateTime.setDate(selectedDateTime.getDate() + (customInterval || 1));
