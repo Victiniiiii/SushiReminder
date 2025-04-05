@@ -538,7 +538,7 @@ const App = () => {
 						<button onClick={handleCreateReminder} className={`${isDarkMode ? "bg-gray-600 text-white" : "bg-blue-500 text-black"}`}>
 							Save
 						</button>
-						<button onClick={() => setIsModalOpen(false)} className={`${isDarkMode ? "bg-gray-600 text-white" : "bg-red-500 text-black"}`}>
+						<button onClick={() => setIsModalOpen(false)} className={`text-black ${isDarkMode ? "bg-gray-600" : "bg-red-500"}`}>
 							Cancel
 						</button>
 					</div>
