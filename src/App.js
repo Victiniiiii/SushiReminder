@@ -493,7 +493,7 @@ const App = () => {
 								</div>
 								<div className="w-full sm:w-1/2 flex flex-col justify-center">
 									<span className="mb-1">Quick set minutes:</span>
-									<div className="flex flex-wrap gap-2">
+									<div className="flex justify-center gap-2">
 										{[0, 15, 30, 45].map((minute) => (
 											<button
 												key={minute}
@@ -538,7 +538,7 @@ const App = () => {
 										</div>
 										<div className="w-full sm:w-1/2 flex flex-col justify-center">
 											<span className="mb-1">Quick set minutes:</span>
-											<div className="flex flex-wrap gap-2">
+											<div className="flex justify-center gap-2">
 												{[0, 15, 30, 45].map((minute) => (
 													<button
 														key={minute}
