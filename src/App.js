@@ -214,7 +214,7 @@ const App = () => {
 
 	const oneTimeCounts = getReminderStatusCounts(reminders.oneTime, oneTimeCountdowns);
 	const repeatedCounts = getReminderStatusCounts(reminders.repeated, repeatedCountdowns);
-    
+
 	const getNextOccurrence = (reminder) => {
 		const now = new Date();
 		let nextOccurrence = new Date();
@@ -484,27 +484,33 @@ const App = () => {
 								Date:
 								<input type="date" name="date" value={initialData.date} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 							</label>
-							<label className="block mb-4">
-								Time:
-								<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
-							</label>
-							<div className="flex space-x-2 mt-2 mb-4">
-								<span>Quick set minutes:</span>
-								{[0, 15, 30, 45].map((minute) => (
-									<button
-										key={minute}
-										type="button"
-										onClick={() => {
-											const currentTime = reminderData.time || "";
-											const [hours] = currentTime.split(":");
-											const newTime = `${hours || "00"}:${String(minute).padStart(2, "0")}`;
-											setReminderData((prev) => ({ ...prev, time: newTime }));
-										}}
-										className={`px-2 py-1 rounded text-sm ${isDarkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"}`}
-									>
-										{minute}
-									</button>
-								))}
+							<div className="flex gap-4 mb-4 flex-row">
+								<div className="w-full sm:w-1/2">
+									<label className="block">
+										Time:
+										<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"} w-full`} />
+									</label>
+								</div>
+								<div className="w-full sm:w-1/2 flex flex-col justify-center">
+									<span className="mb-1">Quick set minutes:</span>
+									<div className="flex flex-wrap gap-2">
+										{[0, 15, 30, 45].map((minute) => (
+											<button
+												key={minute}
+												type="button"
+												onClick={() => {
+													const currentTime = reminderData.time || "";
+													const [hours] = currentTime.split(":");
+													const newTime = `${hours || "00"}:${String(minute).padStart(2, "0")}`;
+													setReminderData((prev) => ({ ...prev, time: newTime }));
+												}}
+												className={`w-8 px-2 py-1 rounded text-sm text-center ${isDarkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"}`}
+											>
+												{minute}
+											</button>
+										))}
+									</div>
+								</div>
 							</div>
 						</>
 					)}
@@ -523,28 +529,35 @@ const App = () => {
 							</label>
 							{initialData.repeatFrequency === "minute" || initialData.repeatFrequency === "hourly" || initialData.repeatFrequency === "daily" ? (
 								<>
-									<label className="block mb-4">
-										Time:
-										<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
-									</label>
-									<div className="flex space-x-2 mt-2 mb-4">
-										<span>Quick set minutes:</span>
-										{[0, 15, 30, 45].map((minute) => (
-											<button
-												key={minute}
-												type="button"
-												onClick={() => {
-													const currentTime = reminderData.time || "";
-													const [hours] = currentTime.split(":");
-													const newTime = `${hours || "00"}:${String(minute).padStart(2, "0")}`;
-													setReminderData((prev) => ({ ...prev, time: newTime }));
-												}}
-												className={`px-2 py-1 rounded text-sm ${isDarkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"}`}
-											>
-												{minute}
-											</button>
-										))}
+									<div className="flex gap-4 mb-4 flex-row">
+										<div className="w-full sm:w-1/2">
+											<label className="block">
+												Time:
+												<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"} w-full`} />
+											</label>
+										</div>
+										<div className="w-full sm:w-1/2 flex flex-col justify-center">
+											<span className="mb-1">Quick set minutes:</span>
+											<div className="flex flex-wrap gap-2">
+												{[0, 15, 30, 45].map((minute) => (
+													<button
+														key={minute}
+														type="button"
+														onClick={() => {
+															const currentTime = reminderData.time || "";
+															const [hours] = currentTime.split(":");
+															const newTime = `${hours || "00"}:${String(minute).padStart(2, "0")}`;
+															setReminderData((prev) => ({ ...prev, time: newTime }));
+														}}
+														className={`w-8 px-2 py-1 rounded text-sm text-center ${isDarkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"}`}
+													>
+														{minute}
+													</button>
+												))}
+											</div>
+										</div>
 									</div>
+
 									<label className="block mb-4">
 										Custom Interval (in {initialData.repeatFrequency === "minute" ? "minutes" : initialData.repeatFrequency === "hourly" ? "hours" : "days"}):
 										<input type="number" name="customInterval" value={initialData.customInterval || 1} onChange={handleInputChange} min="1" className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />

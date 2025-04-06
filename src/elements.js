@@ -36,11 +36,13 @@ export const Header = ({ setIsModalOpen, isDarkMode }) => (
 	</header>
 );
 
-const Ball = ({ count, color }) =>
+const Ball = ({ count, color, offsetX = 0 }) =>
 	count > 0 && (
 		<span
-			className={`ml-1 inline-flex items-center justify-center text-xs font-bold text-white rounded-full`}
+			className="ml-1 inline-flex items-center justify-center text-xs font-bold text-white rounded-full"
 			style={{
+				position: "absolute",
+				transform: `translate(${offsetX}px, -10px)`,
 				backgroundColor: color,
 				minWidth: "18px",
 				height: "18px",
@@ -55,14 +57,14 @@ export const Navbar = ({ activeTab, setActiveTab, isDarkMode, oneTimeCounts, rep
 	<nav className={`flex justify-center py-2`}>
 		<button className={`mx-4 py-2 px-4 border-b-2 cursor-pointer text-base ${activeTab === "one-time" ? "text-[#6200ea] border-[#6200ea]" : "border-transparent"}`} onClick={() => setActiveTab("one-time")}>
 			One-Time Reminders
-			<Ball count={oneTimeCounts.expired} color="red" />
-			<Ball count={oneTimeCounts.lessThanHour} color="#ff6666" />
+			<Ball count={oneTimeCounts.expired} color="red" offsetX={0}/>
+			<Ball count={oneTimeCounts.lessThanHour} color="#ff6666" offsetX={20} />
 		</button>
 
 		<button className={`mx-4 py-2 px-4 border-b-2 cursor-pointer text-base ${activeTab === "repeated" ? "text-[#6200ea] border-[#6200ea]" : "border-transparent"}`} onClick={() => setActiveTab("repeated")}>
 			Repeated Reminders
-			<Ball count={repeatedCounts.expired} color="red" />
-			<Ball count={repeatedCounts.lessThanHour} color="#ff6666" />
+			<Ball count={repeatedCounts.expired} color="red" offsetX={0}/>
+			<Ball count={repeatedCounts.lessThanHour} color="#ff6666" offsetX={20} />
 		</button>
 
 		<button className={`mx-4 py-2 px-4 border-b-2 cursor-pointer text-base ${activeTab === "settings" ? "text-[#6200ea] border-[#6200ea]" : "border-transparent"}`} onClick={() => setActiveTab("settings")}>
