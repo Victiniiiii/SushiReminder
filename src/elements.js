@@ -36,14 +36,35 @@ export const Header = ({ setIsModalOpen, isDarkMode }) => (
 	</header>
 );
 
-export const Navbar = ({ activeTab, setActiveTab, isDarkMode }) => (
+const Ball = ({ count, color }) =>
+	count > 0 && (
+		<span
+			className={`ml-1 inline-flex items-center justify-center text-xs font-bold text-white rounded-full`}
+			style={{
+				backgroundColor: color,
+				minWidth: "18px",
+				height: "18px",
+				padding: "0 5px",
+			}}
+		>
+			{count}
+		</span>
+	);
+
+export const Navbar = ({ activeTab, setActiveTab, isDarkMode, oneTimeCounts, repeatedCounts }) => (
 	<nav className={`flex justify-center py-2`}>
 		<button className={`mx-4 py-2 px-4 border-b-2 cursor-pointer text-base ${activeTab === "one-time" ? "text-[#6200ea] border-[#6200ea]" : "border-transparent"}`} onClick={() => setActiveTab("one-time")}>
 			One-Time Reminders
+			<Ball count={oneTimeCounts.expired} color="red" />
+			<Ball count={oneTimeCounts.lessThanHour} color="#ff6666" />
 		</button>
+
 		<button className={`mx-4 py-2 px-4 border-b-2 cursor-pointer text-base ${activeTab === "repeated" ? "text-[#6200ea] border-[#6200ea]" : "border-transparent"}`} onClick={() => setActiveTab("repeated")}>
 			Repeated Reminders
+			<Ball count={repeatedCounts.expired} color="red" />
+			<Ball count={repeatedCounts.lessThanHour} color="#ff6666" />
 		</button>
+
 		<button className={`mx-4 py-2 px-4 border-b-2 cursor-pointer text-base ${activeTab === "settings" ? "text-[#6200ea] border-[#6200ea]" : "border-transparent"}`} onClick={() => setActiveTab("settings")}>
 			Settings
 		</button>

@@ -196,6 +196,25 @@ const App = () => {
 		setIsModalOpen(true);
 	};
 
+	const getReminderStatusCounts = (reminderList, countdowns) => {
+		let lessThanHour = 0;
+		let expired = 0;
+
+		reminderList.forEach((reminder) => {
+			const countdown = countdowns[reminder.id];
+			if (countdown === "Time's up!") {
+				expired++;
+			} else if (countdown?.startsWith("0h")) {
+				lessThanHour++;
+			}
+		});
+
+		return { lessThanHour, expired };
+	};
+
+	const oneTimeCounts = getReminderStatusCounts(reminders.oneTime, oneTimeCountdowns);
+	const repeatedCounts = getReminderStatusCounts(reminders.repeated, repeatedCountdowns);
+    
 	const getNextOccurrence = (reminder) => {
 		const now = new Date();
 		let nextOccurrence = new Date();
@@ -862,7 +881,7 @@ const App = () => {
 			<Titlebar isDarkMode={isDarkMode} />
 			<main className="h-full">
 				<Header setIsModalOpen={handleOpenCreateModal} isDarkMode={isDarkMode} />
-				<Navbar activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} />
+				<Navbar activeTab={activeTab} setActiveTab={setActiveTab} isDarkMode={isDarkMode} oneTimeCounts={oneTimeCounts} repeatedCounts={repeatedCounts} />
 				<div>{renderTabContent()}</div>
 			</main>
 			{isModalOpen && renderModalContent()}
