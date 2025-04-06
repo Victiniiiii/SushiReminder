@@ -111,7 +111,7 @@ export const Settings = ({ sortBy, setSortBy, isDarkMode, setIsDarkMode, focusHi
 					</select>
 				</div>
 				<button className="bg-green-700 px-4 py-2 rounded-xl text-gray-200" onClick={playAudio}>
-					Test the notification sound
+					Test the Notification Sound
 				</button>
 			</div>
 			<button className="bg-green-700 px-4 py-2 rounded-xl text-gray-200" onClick={focusHideHotkeyFunction}>
