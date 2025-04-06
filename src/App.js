@@ -447,7 +447,7 @@ const App = () => {
 
 		return (
 			<div className={`${isDarkMode ? "dark" : "light"} fixed inset-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center`}>
-				<div className={`modal-content ${isDarkMode ? "bg-gray-800 text-white dark-scrollbar" : "bg-white text-black"} p-8 rounded-lg w-[90%] max-w-sm text-left max-h-[80vh] overflow-y-scroll flex items-stretch flex-col`}>
+				<div className={`modal-content ${isDarkMode ? "bg-gray-800 text-white dark-scrollbar" : "bg-white text-black"} p-4 rounded-lg w-[90%] max-w-sm text-left max-h-[97vh] overflow-y-auto flex items-stretch flex-col`}>
 					<label className="block mb-4">
 						Reminder Name:
 						<input type="text" name="name" value={initialData.name} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
@@ -461,11 +461,11 @@ const App = () => {
 					</label>
 					{reminderType === "one-time" && (
 						<>
-							<label>
+							<label className="block mb-4">
 								Date:
 								<input type="date" name="date" value={initialData.date} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 							</label>
-							<label>
+							<label className="block mb-4">
 								Time:
 								<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 							</label>
@@ -473,7 +473,7 @@ const App = () => {
 					)}
 					{reminderType === "repeated" && (
 						<>
-							<label>
+							<label className="block mb-4">
 								Frequency:
 								<select name="repeatFrequency" value={initialData.repeatFrequency} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`}>
 									<option value="minute">Minute</option>
@@ -486,11 +486,11 @@ const App = () => {
 							</label>
 							{initialData.repeatFrequency === "minute" || initialData.repeatFrequency === "hourly" || initialData.repeatFrequency === "daily" ? (
 								<>
-									<label>
+									<label className="block mb-4">
 										Time:
 										<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
-									<label>
+									<label className="block mb-4">
 										Custom Interval (in {initialData.repeatFrequency === "minute" ? "minutes" : initialData.repeatFrequency === "hourly" ? "hours" : "days"}):
 										<input type="number" name="customInterval" value={initialData.customInterval || 1} onChange={handleInputChange} min="1" className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
@@ -537,7 +537,7 @@ const App = () => {
 									</label>
 								</>
 							)}
-							<label>
+							<label className="block mb-4">
 								Reset Mode:
 								<select name="resetMode" value={initialData.resetMode} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`}>
 									<option value="manual">Manual</option>
@@ -738,7 +738,7 @@ const App = () => {
 			return (
 				<Droppable droppableId={type}>
 					{(provided) => (
-						<div {...provided.droppableProps} ref={provided.innerRef} className={`custom-height p-8 overflow-y-auto ${isDarkMode ? "dark-scrollbar" : ""}`}>
+						<div {...provided.droppableProps} ref={provided.innerRef} className={`custom-height p-4 overflow-y-auto ${isDarkMode ? "dark-scrollbar" : ""}`}>
 							{sortReminders(reminders[type]).map((reminder, index) => (
 								<Draggable key={reminder.id} draggableId={reminder.id} index={index}>
 									{(provided) => (
