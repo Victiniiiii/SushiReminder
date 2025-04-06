@@ -57,13 +57,13 @@ export const Navbar = ({ activeTab, setActiveTab, isDarkMode, oneTimeCounts, rep
 	<nav className={`flex justify-center py-2`}>
 		<button className={`mx-4 py-2 px-4 border-b-2 cursor-pointer text-base ${activeTab === "one-time" ? "text-[#6200ea] border-[#6200ea]" : "border-transparent"}`} onClick={() => setActiveTab("one-time")}>
 			One-Time Reminders
-			<Ball count={oneTimeCounts.expired} color="red" offsetX={0}/>
+			<Ball count={oneTimeCounts.expired} color="red" offsetX={0} />
 			<Ball count={oneTimeCounts.lessThanHour} color="#ff6666" offsetX={20} />
 		</button>
 
 		<button className={`mx-4 py-2 px-4 border-b-2 cursor-pointer text-base ${activeTab === "repeated" ? "text-[#6200ea] border-[#6200ea]" : "border-transparent"}`} onClick={() => setActiveTab("repeated")}>
 			Repeated Reminders
-			<Ball count={repeatedCounts.expired} color="red" offsetX={0}/>
+			<Ball count={repeatedCounts.expired} color="red" offsetX={0} />
 			<Ball count={repeatedCounts.lessThanHour} color="#ff6666" offsetX={20} />
 		</button>
 
@@ -73,30 +73,53 @@ export const Navbar = ({ activeTab, setActiveTab, isDarkMode, oneTimeCounts, rep
 	</nav>
 );
 
-export const Settings = ({ sortBy, setSortBy, isDarkMode, setIsDarkMode, focusHideHotkeyFunction, quitHotkeyFunction }) => (
-	<div className={`space-y-6 flex flex-col items-center`}>
-		<div className="flex items-center space-x-4">
-			<span>Sort by:</span>
-			<span className={`${sortBy === "name" ? "text-green-500" : "text-gray-500"}`}>Name</span>
-			<span className={`${sortBy === "time" ? "text-green-500" : "text-gray-500"}`}>Time</span>
-			<span className={`${sortBy === "custom" ? "text-green-500" : "text-gray-500"}`}>Custom</span>
-			<div className={`relative inline-block w-16 h-6 ${isDarkMode ? "bg-gray-600" : "bg-gray-300"} rounded-full cursor-pointer`} onClick={() => setSortBy(sortBy === "name" ? "time" : sortBy === "time" ? "custom" : "name")}>
-				<div className={`absolute top-1 left-1 w-4 h-4 ${isDarkMode ? "bg-gray-900" : "bg-white"} rounded-full transition-transform duration-200 ${sortBy === "time" ? "transform translate-x-5" : sortBy === "custom" ? "transform translate-x-10" : ""}`}></div>
+export const Settings = ({ sortBy, setSortBy, isDarkMode, setIsDarkMode, focusHideHotkeyFunction, playAudio, quitHotkeyFunction, selectedAudio, setSelectedAudio }) => {
+	const audioOptions = [
+		{ value: "none", label: "No Audio" },
+		{ value: "a", label: "Boom" },
+		{ value: "b", label: "Nokia Saul" },
+		{ value: "c", label: "Boop" },
+	];
+	return (
+		<div className={`space-y-6 flex flex-col items-center`}>
+			<div className="flex items-center space-x-4">
+				<span>Sort by:</span>
+				<span className={`${sortBy === "name" ? "text-green-500" : "text-gray-500"}`}>Name</span>
+				<span className={`${sortBy === "time" ? "text-green-500" : "text-gray-500"}`}>Time</span>
+				<span className={`${sortBy === "custom" ? "text-green-500" : "text-gray-500"}`}>Custom</span>
+				<div className={`relative inline-block w-16 h-6 ${isDarkMode ? "bg-gray-600" : "bg-gray-300"} rounded-full cursor-pointer`} onClick={() => setSortBy(sortBy === "name" ? "time" : sortBy === "time" ? "custom" : "name")}>
+					<div className={`absolute top-1 left-1 w-4 h-4 ${isDarkMode ? "bg-gray-900" : "bg-white"} rounded-full transition-transform duration-200 ${sortBy === "time" ? "transform translate-x-5" : sortBy === "custom" ? "transform translate-x-10" : ""}`}></div>
+				</div>
 			</div>
-		</div>
-		<div className="flex items-center space-x-4">
-			<span>UI Theme:</span>
-			<span className={`${!isDarkMode ? "text-green-500" : "text-gray-500"}`}>Light</span>
-			<span className={`${isDarkMode ? "text-green-500" : "text-gray-500"}`}>Dark</span>
-			<div className={`relative inline-block w-12 h-6 ${isDarkMode ? "bg-gray-600" : "bg-gray-300"} rounded-full cursor-pointer`} onClick={() => setIsDarkMode(!isDarkMode)}>
-				<div className={`absolute top-1 left-1 w-4 h-4 ${isDarkMode ? "bg-gray-900" : "bg-white"} rounded-full transition-transform duration-200 ${isDarkMode ? "transform translate-x-6" : ""}`}></div>
+			<div className="flex items-center space-x-4">
+				<span>UI Theme:</span>
+				<span className={`${!isDarkMode ? "text-green-500" : "text-gray-500"}`}>Light</span>
+				<span className={`${isDarkMode ? "text-green-500" : "text-gray-500"}`}>Dark</span>
+				<div className={`relative inline-block w-12 h-6 ${isDarkMode ? "bg-gray-600" : "bg-gray-300"} rounded-full cursor-pointer`} onClick={() => setIsDarkMode(!isDarkMode)}>
+					<div className={`absolute top-1 left-1 w-4 h-4 ${isDarkMode ? "bg-gray-900" : "bg-white"} rounded-full transition-transform duration-200 ${isDarkMode ? "transform translate-x-6" : ""}`}></div>
+				</div>
 			</div>
+			<div className="mb-4 flex items-center justify-between">
+				<span>Notification Sound:</span>
+				<div className="relative w-32 flex items-center justify-center text-center mx-2">
+					<select value={selectedAudio} onChange={(e) => setSelectedAudio(e.target.value)} className={`block appearance-none w-full py-2 rounded-xl ${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-200 text-black"}`}>
+						{audioOptions.map((option) => (
+							<option className="flex items-center justify-center text-center" key={option.value} value={option.value}>
+								{option.label}
+							</option>
+						))}
+					</select>
+				</div>
+				<button className="bg-green-700 px-4 py-2 rounded-xl text-gray-200" onClick={playAudio}>
+					Test the notification sound
+				</button>
+			</div>
+			<button className="bg-green-700 px-4 py-2 rounded-xl text-gray-200" onClick={focusHideHotkeyFunction}>
+				Set Hotkey for Focusing and Hiding App
+			</button>
+			<button className="bg-green-700 px-4 py-2 rounded-xl text-gray-200" onClick={quitHotkeyFunction}>
+				Set Hotkey for Quitting App
+			</button>
 		</div>
-		<button className="bg-green-700 px-4 py-2 rounded-2xl text-gray-200" onClick={focusHideHotkeyFunction}>
-			Set Hotkey for Focusing and Hiding App
-		</button>
-		<button className="bg-green-700 px-4 py-2 rounded-2xl text-gray-200" onClick={quitHotkeyFunction}>
-			Set Hotkey for Quitting App
-		</button>
-	</div>
-);
+	);
+};

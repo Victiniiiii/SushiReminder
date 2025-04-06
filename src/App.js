@@ -12,11 +12,15 @@ import { Header, Navbar, Settings, Titlebar } from "./elements.js";
 import { options } from "./systemTray.js";
 import { useHotkeys } from "./hotkeys.js";
 import "./index.css";
+import audioFileA from "./soundEffects/a.mp3";
+import audioFileB from "./soundEffects/b.mp3";
+import audioFileC from "./soundEffects/c.mp3";
 
 const App = () => {
 	const { focusHideHotkeyFunction, quitHotkeyFunction } = useHotkeys();
 	const [sortBy, setSortBy] = useState(() => localStorage.getItem("sortBy") || "custom");
 	const [isDarkMode, setIsDarkMode] = useState(() => JSON.parse(localStorage.getItem("isDarkMode")) || true);
+	const [selectedAudio, setSelectedAudio] = useState(() => localStorage.getItem("selectedAudio") || "a");
 	const [activeTab, setActiveTab] = useState("one-time");
 	const [reminderType, setReminderType] = useState("one-time");
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +40,13 @@ const App = () => {
 		customInterval: "",
 	});
 	const appWindow = getCurrentWindow();
+
+	const audioFiles = {
+		a: new Audio(audioFileA),
+		b: new Audio(audioFileB),
+		c: new Audio(audioFileC),
+		none: null,
+	};
 
 	useEffect(() => {
 		document.getElementById("minimizeButton")?.addEventListener("click", () => appWindow.minimize());
@@ -71,11 +82,11 @@ const App = () => {
 	}, []);
 
 	useEffect(() => {
-		const settings = { sortBy, isDarkMode };
+		const settings = { sortBy, isDarkMode, selectedAudio };
 		for (const key in settings) {
 			localStorage.setItem(key, key === "isDarkMode" ? JSON.stringify(settings[key]) : settings[key]);
 		}
-	}, [sortBy, isDarkMode]);
+	}, [sortBy, isDarkMode, selectedAudio]);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -90,6 +101,7 @@ const App = () => {
 					if (!reminder.notified) {
 						sendNotification(`One Time Reminder: ${reminder.name}`);
 						reminder.notified = true;
+						playAudio();
 					}
 				} else {
 					newOneTimeCountdowns[reminder.id] = formatCountdown(timeDiff);
@@ -108,6 +120,7 @@ const App = () => {
 					if (!reminder.notified) {
 						reminder.notified = true;
 						sendNotification(`Repeated Reminder: ${reminder.name}`);
+						playAudio();
 					}
 
 					if (reminder.resetMode === "automatic") {
@@ -175,6 +188,16 @@ const App = () => {
 
 		return () => clearInterval(interval);
 	}, [reminders, oneTimeCountdowns, repeatedCountdowns]);
+
+	const playAudio = () => {
+		if (selectedAudio === "none" || !audioFiles[selectedAudio]) return;
+		const audio = audioFiles[selectedAudio];
+		audio.currentTime = 0;
+		audio.play();
+		setTimeout(() => {
+			audio.pause();
+		}, 7500);
+	};
 
 	const handleOpenCreateModal = () => {
 		const now = new Date();
@@ -876,7 +899,7 @@ const App = () => {
 			case "repeated":
 				return <DragDropContext onDragEnd={onDragEnd}>{renderReminders("repeated")}</DragDropContext>;
 			case "settings":
-				return <Settings sortBy={sortBy} setSortBy={setSortBy} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} focusHideHotkeyFunction={focusHideHotkeyFunction} quitHotkeyFunction={quitHotkeyFunction} />;
+				return <Settings sortBy={sortBy} setSortBy={setSortBy} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} focusHideHotkeyFunction={focusHideHotkeyFunction} quitHotkeyFunction={quitHotkeyFunction} selectedAudio={selectedAudio} setSelectedAudio={setSelectedAudio} playAudio={playAudio} />;
 			default:
 				return null;
 		}
