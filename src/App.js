@@ -45,7 +45,7 @@ const App = () => {
 		const loadReminders = async () => {
 			if (!trayExists) {
 				setTrayExists(true);
-				const tray = await TrayIcon.new(options);
+				await TrayIcon.new(options);
 			}
 
 			if (!(await isPermissionGranted(BaseDirectory.Document))) {
@@ -469,6 +469,24 @@ const App = () => {
 								Time:
 								<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 							</label>
+							<div className="flex space-x-2 mt-2 mb-4">
+								<span>Quick set minutes:</span>
+								{[0, 15, 30, 45].map((minute) => (
+									<button
+										key={minute}
+										type="button"
+										onClick={() => {
+											const currentTime = reminderData.time || "";
+											const [hours] = currentTime.split(":");
+											const newTime = `${hours || "00"}:${String(minute).padStart(2, "0")}`;
+											setReminderData((prev) => ({ ...prev, time: newTime }));
+										}}
+										className={`px-2 py-1 rounded text-sm ${isDarkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"}`}
+									>
+										{minute}
+									</button>
+								))}
+							</div>
 						</>
 					)}
 					{reminderType === "repeated" && (
@@ -490,6 +508,24 @@ const App = () => {
 										Time:
 										<input type="time" name="time" value={initialData.time} onChange={handleInputChange} className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
 									</label>
+									<div className="flex space-x-2 mt-2 mb-4">
+										<span>Quick set minutes:</span>
+										{[0, 15, 30, 45].map((minute) => (
+											<button
+												key={minute}
+												type="button"
+												onClick={() => {
+													const currentTime = reminderData.time || "";
+													const [hours] = currentTime.split(":");
+													const newTime = `${hours || "00"}:${String(minute).padStart(2, "0")}`;
+													setReminderData((prev) => ({ ...prev, time: newTime }));
+												}}
+												className={`px-2 py-1 rounded text-sm ${isDarkMode ? "bg-gray-700 hover:bg-gray-600" : "bg-gray-200 hover:bg-gray-300"}`}
+											>
+												{minute}
+											</button>
+										))}
+									</div>
 									<label className="block mb-4">
 										Custom Interval (in {initialData.repeatFrequency === "minute" ? "minutes" : initialData.repeatFrequency === "hourly" ? "hours" : "days"}):
 										<input type="number" name="customInterval" value={initialData.customInterval || 1} onChange={handleInputChange} min="1" className={`${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-black"}`} />
