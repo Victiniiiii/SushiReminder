@@ -747,7 +747,7 @@ const App = () => {
 												<span
 													className={reminder.checked ? "!line-through !text-gray-500" : ""}
 													style={{
-														color: (type === "oneTime" && oneTimeCountdowns[reminder.id] === "Time's up!") || (type === "repeated" && repeatedCountdowns[reminder.id] === "Time's up!") ? "red" : "inherit",
+														color: (type === "oneTime" && oneTimeCountdowns[reminder.id] === "Time's up!") || (type === "repeated" && repeatedCountdowns[reminder.id] === "Time's up!") ? "red" : (type === "oneTime" && oneTimeCountdowns[reminder.id]?.startsWith("0h")) || (type === "repeated" && repeatedCountdowns[reminder.id]?.startsWith("0h")) ? "#ff6666" : "inherit",
 													}}
 												>
 													{reminder.name} -{" "}
