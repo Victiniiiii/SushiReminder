@@ -48,6 +48,7 @@ const App = () => {
 		none: null,
 	};
 
+    // Sets tray, shortcuts, permissions, reminder file etc. and loads reminders
 	useEffect(() => {
 		document.getElementById("minimizeButton")?.addEventListener("click", () => appWindow.minimize());
 		document.getElementById("hideButton")?.addEventListener("click", () => appWindow.hide());
@@ -81,6 +82,7 @@ const App = () => {
 		loadReminders();
 	}, []);
 
+    // Saves settings in localstorage when it changes
 	useEffect(() => {
 		const settings = { sortBy, isDarkMode, selectedAudio };
 		for (const key in settings) {
@@ -88,6 +90,7 @@ const App = () => {
 		}
 	}, [sortBy, isDarkMode, selectedAudio]);
 
+    // Updates the reminders every second, to check if any finished / below one hour mark
 	useEffect(() => {
 		const interval = setInterval(() => {
 			const now = new Date();
@@ -238,6 +241,7 @@ const App = () => {
 	const oneTimeCounts = getReminderStatusCounts(reminders.oneTime, oneTimeCountdowns);
 	const repeatedCounts = getReminderStatusCounts(reminders.repeated, repeatedCountdowns);
 
+    // Checks when will a reminder happen next
 	const getNextOccurrence = (reminder) => {
 		const now = new Date();
 		let nextOccurrence = new Date();
