@@ -1,6 +1,6 @@
 # SushiReminder
 ## What is this project?
-This is a minimalistic reminder app for desktop, built by scratch because i didn't like the alternatives. Very lightweight, but with a lot of features.
+This is a minimalistic reminder app for desktop, built by scratch because i didn't like the alternatives. Very lightweight, but with many features.
 ## Technologies Used
 Used JavaScript & React for the code, 
 
